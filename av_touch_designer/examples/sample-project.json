@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "sample-001",
+  "name": "標準会議室",
+  "canvas": {
+    "width": 1280,
+    "height": 800
+  },
+  "themeId": "modern-dark",
+  "initialState": {
+    "selectedSource": "pc",
+    "volume": 65,
+    "muted": false
+  },
+  "assets": {},
+  "pages": [
+    {
+      "id": "main",
+      "name": "メイン",
+      "elements": [
+        {
+          "id": "title",
+          "type": "label",
+          "x": 48,
+          "y": 40,
+          "width": 550,
+          "height": 64,
+          "zIndex": 1,
+          "locked": false,
+          "props": {
+            "text": "会議室 AV CONTROL",
+            "fontSize": 32
+          },
+          "action": {
+            "type": "none"
+          }
+        },
+        {
+          "id": "pc",
+          "type": "button",
+          "x": 48,
+          "y": 160,
+          "width": 240,
+          "height": 100,
+          "zIndex": 2,
+          "locked": false,
+          "props": {
+            "text": "PC",
+            "icon": "laptop"
+          },
+          "action": {
+            "type": "select",
+            "stateKey": "selectedSource",
+            "value": "pc"
+          }
+        },
+        {
+          "id": "wireless",
+          "type": "button",
+          "x": 312,
+          "y": 160,
+          "width": 240,
+          "height": 100,
+          "zIndex": 3,
+          "locked": false,
+          "props": {
+            "text": "Wireless",
+            "icon": "radio-tower"
+          },
+          "action": {
+            "type": "select",
+            "stateKey": "selectedSource",
+            "value": "wireless"
+          }
+        },
+        {
+          "id": "volume",
+          "type": "volume",
+          "x": 48,
+          "y": 320,
+          "width": 504,
+          "height": 112,
+          "zIndex": 4,
+          "locked": false,
+          "props": {
+            "label": "音量",
+            "stateKey": "volume",
+            "muteStateKey": "muted"
+          },
+          "action": {
+            "type": "none"
+          }
+        }
+      ]
+    }
+  ]
+}
