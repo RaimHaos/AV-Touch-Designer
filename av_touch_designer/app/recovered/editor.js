@@ -35576,11 +35576,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                         style: { width: `${o}%` },
                       }),
                     }),
-                    (0, V.jsx)("span", {
-                      children: l
-                        ? "\u30DF\u30E5\u30FC\u30C8\u4E2D"
-                        : "\u97F3\u58F0\u30AA\u30F3",
-                    }),
+                    (0,V.jsx)('button',{type:'button',tabIndex:-1,className:`av-button editor-mute ${l?'selected':''}`,'aria-disabled':true,children:l?'ミュート中 ✓':'ミュート'}),
                   ],
                 }),
           ],
@@ -36636,18 +36632,19 @@ SOFTWARE.
                   "\u96FB\u6E90\u3092OFF\u306B\u3057\u307E\u3059\u304B\uFF1F",
                 ),
                 x: 24,
-                y: 32,
+                y: 56,
                 width: 472,
                 height: 64,
+                props:{text:"電源をOFFにしますか？",fontSize:28,align:"center"},
               },
               {
-                ...Lf("power_yes", "OFF\u306B\u3059\u308B", 24, [
+                ...Lf("power_yes", "OFF\u306B\u3059\u308B", 48, [
                   { type: "setValue", stateKey: "power", value: !1 },
                   { type: "closePopup" },
                 ]),
                 props: { text: "OFF\u306B\u3059\u308B", variant: "danger" },
               },
-              Lf("power_cancel", "\u30AD\u30E3\u30F3\u30BB\u30EB", 256, [
+              Lf("power_cancel", "\u30AD\u30E3\u30F3\u30BB\u30EB", 272, [
                 { type: "closePopup" },
               ]),
             ],
@@ -38281,7 +38278,7 @@ SOFTWARE.
     (0, Se.useEffect)(() => {
       let b = (C) => {
         if (
-          n ||
+          n || C.defaultPrevented || C.target.closest("dialog") ||
           C.target.closest("input,textarea,select,[contenteditable=true]")
         )
           return;
@@ -38314,7 +38311,7 @@ SOFTWARE.
       let vn = l.groups.find((Co) => Co.memberIds.includes(C))?.memberIds ?? [
           C,
         ],
-        eb = b.shiftKey
+        eb = (b.ctrlKey || b.metaKey)
           ? p.includes(C)
             ? p.filter((Co) => !vn.includes(Co))
             : [...new Set([...p, ...vn])]
@@ -38322,7 +38319,7 @@ SOFTWARE.
             ? p
             : vn;
       (g(eb),
-        !b.shiftKey &&
+        !(b.ctrlKey || b.metaKey) &&
           (d.elements.find((Co) => Co.id === C)?.locked ||
             (b.currentTarget.setPointerCapture(b.pointerId),
             (ke.current = {
@@ -38573,6 +38570,11 @@ SOFTWARE.
             }),
           ],
         }),
+        !n&&(0,w.jsx)(EditorRibbon,{selection:p,copy:_o,paste:()=>Eo(),duplicate:xo,remove:bo,zoomFit:HA,
+          align:mode=>{try{ue(b=>mode==='centerX'||mode==='centerY'?AVLayout.arrange(b,d.id,p,mode):Vf(b,d.id,p,mode))}catch(error){Hn(error)}},
+          arrange:(mode,gap,cols)=>ue(b=>AVLayout.arrange(b,d.id,p,mode,gap,cols)),
+          group:()=>ue(b=>({...b,groups:[...b.groups.filter(group=>!group.memberIds.some(id=>p.includes(id))),{id:vt('group'),memberIds:p}]})),
+          ungroup:()=>ue(b=>({...b,groups:b.groups.filter(group=>!group.memberIds.some(id=>p.includes(id)))}))}),
         T &&
           (0, w.jsxs)("div", {
             className: "error",
@@ -38656,6 +38658,7 @@ SOFTWARE.
                         ),
                       ),
                     }),
+                    (0,w.jsx)(TemplateTools,{project:l,containerId:d.id,commit:Yt,select:g,addPower:()=>W3('powerControl')}),
                     (0, w.jsxs)("select", {
                       "aria-label": "AV\u90E8\u54C1",
                       defaultValue: "",
@@ -38795,8 +38798,8 @@ SOFTWARE.
                             className: p.includes(b.id) ? "active" : "",
                             onClick: (C) =>
                               g(
-                                C.shiftKey
-                                  ? [...new Set([...p, b.id])]
+                                (C.ctrlKey || C.metaKey)
+                                  ? p.includes(b.id)?p.filter(id=>id!==b.id):[...new Set([...p, b.id])]
                                   : [b.id],
                               ),
                             children: [
@@ -38983,10 +38986,9 @@ SOFTWARE.
                     }),
                   ],
                 }),
-                (0, w.jsxs)("aside", {
-                  className: "inspector",
+                (0, w.jsxs)(InspectorTabs, {
                   children: [
-                    (0,w.jsx)(RecoveryTools,{project:l,containerId:d.id,selection:p,commit:b=>Yt(AVLayout.reflow(l,b)),select:g,error:Hn}),
+
                     (0, w.jsx)("h2", {
                       children: we
                         ? "\u30D7\u30ED\u30D1\u30C6\u30A3"
@@ -39205,87 +39207,6 @@ SOFTWARE.
                             ),
                           ],
                         }),
-                    (0, w.jsx)("h2", { children: "\u9078\u629E\u64CD\u4F5C" }),
-                    (0, w.jsxs)("div", {
-                      className: "row",
-                      children: [
-                        (0, w.jsx)("button", {
-                          onClick: _o,
-                          children: "\u30B3\u30D4\u30FC",
-                        }),
-                        (0, w.jsx)("button", {
-                          onClick: () => Eo(),
-                          children: "\u8CBC\u4ED8",
-                        }),
-                        (0, w.jsx)("button", {
-                          onClick: xo,
-                          children: "\u8907\u88FD",
-                        }),
-                      ],
-                    }),
-                    p.length > 1 &&
-                      (0, w.jsxs)(w.Fragment, {
-                        children: [
-                          (0, w.jsx)("div", {
-                            className: "row",
-                            children: ["left", "right", "top", "bottom"].map(
-                              (b, C) =>
-                                (0, w.jsx)(
-                                  "button",
-                                  {
-                                    onClick: () => ue((L) => Vf(L, d.id, p, b)),
-                                    children: [
-                                      "\u5DE6\u63C3\u3048",
-                                      "\u53F3\u63C3\u3048",
-                                      "\u4E0A\u63C3\u3048",
-                                      "\u4E0B\u63C3\u3048",
-                                    ][C],
-                                  },
-                                  b,
-                                ),
-                            ),
-                          }),
-                          (0, w.jsxs)("div", {
-                            className: "row",
-                            children: [
-                              (0, w.jsx)("button", {
-                                onClick: () =>
-                                  ue((b) => Vf(b, d.id, p, "horizontal")),
-                                children: "\u6C34\u5E73\u5747\u7B49",
-                              }),
-                              (0, w.jsx)("button", {
-                                onClick: () =>
-                                  ue((b) => Vf(b, d.id, p, "vertical")),
-                                children: "\u5782\u76F4\u5747\u7B49",
-                              }),
-                            ],
-                          }),
-                          (0, w.jsx)("button", {
-                            onClick: () =>
-                              ue((b) => ({
-                                ...b,
-                                groups: [
-                                  ...b.groups.filter(
-                                    (C) =>
-                                      !C.memberIds.some((L) => p.includes(L)),
-                                  ),
-                                  { id: vt("group"), memberIds: p },
-                                ],
-                              })),
-                            children: "\u30B0\u30EB\u30FC\u30D7\u5316",
-                          }),
-                        ],
-                      }),
-                    (0, w.jsx)("button", {
-                      onClick: () =>
-                        ue((b) => ({
-                          ...b,
-                          groups: b.groups.filter(
-                            (C) => !C.memberIds.some((L) => p.includes(L)),
-                          ),
-                        })),
-                      children: "\u30B0\u30EB\u30FC\u30D7\u89E3\u9664",
-                    }),
                     (0, w.jsx)("h2", { children: "\u30C6\u30FC\u30DE" }),
                     (0, w.jsxs)("select", {
                       "aria-label": "\u30C6\u30FC\u30DE",

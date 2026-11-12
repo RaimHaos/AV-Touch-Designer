@@ -22,9 +22,9 @@ await page.getByRole('spinbutton',{name:'width',exact:true}).fill('900');await p
 let data=await save();assert.equal(data.pages[0].elements.find(e=>e.id==='a').width,150);assert.equal(data.pages[0].elements.find(e=>e.id==='a').x,100);
 await page.getByRole('button',{name:'元に戻す',exact:true}).click();data=await save();assert.equal(data.pages[0].elements.find(e=>e.id==='a').width,100);
 await load(data);
-// Shift-select canvas items, align, grid, undo, save.
-await page.locator('.editor-canvas [data-element-id=a]').click();await page.locator('.editor-canvas [data-element-id=b]').click({modifiers:['Shift']});await page.locator('.editor-canvas [data-element-id=c]').click({modifiers:['Shift']});
-await page.getByRole('button',{name:'左右中央揃え',exact:true}).click();data=await save();const items=data.pages[0].elements.filter(e=>['a','b','c'].includes(e.id));assert.equal(new Set(items.map(e=>e.x+e.width/2)).size,1);
+// Ctrl-select canvas items, align, grid, undo, save.
+await page.locator('.editor-canvas [data-element-id=a]').click();await page.locator('.editor-canvas [data-element-id=b]').click({modifiers:['Control']});await page.locator('.editor-canvas [data-element-id=c]').click({modifiers:['Control']});
+await page.getByRole('tab',{name:'配置',exact:true}).click();await page.getByRole('button',{name:'左右中央揃え',exact:true}).click();data=await save();const items=data.pages[0].elements.filter(e=>['a','b','c'].includes(e.id));assert.equal(new Set(items.map(e=>e.x+e.width/2)).size,1);
 await page.getByRole('button',{name:'元に戻す',exact:true}).click();await page.getByRole('spinbutton',{name:'グリッド列数',exact:true}).fill('2');await page.getByRole('button',{name:'グリッド配置',exact:true}).click();data=await save();assert.deepEqual(data.pages[0].elements.filter(e=>['a','b','c'].includes(e.id)).map(e=>[e.x,e.y]),[[80,140],[196,140],[80,216]]);
 // Exercise every alignment/distribution and automatic row/column using real controls.
 for (const [label,check] of [
@@ -34,7 +34,7 @@ for (const [label,check] of [
  ['水平均等',es=>{es.sort((a,b)=>a.x-b.x);return Math.abs((es[1].x-es[0].x-es[0].width)-(es[2].x-es[1].x-es[1].width))<=1}],
  ['垂直均等',es=>{es.sort((a,b)=>a.y-b.y);return Math.abs((es[1].y-es[0].y-es[0].height)-(es[2].y-es[1].y-es[1].height))<=1}],
  ['横並び',es=>new Set(es.map(e=>e.y)).size===1],['縦並び',es=>new Set(es.map(e=>e.x)).size===1]
-]) {await load(fixture);await page.locator('.editor-canvas [data-element-id=a]').click();for(const id of ['b','c'])await page.locator(`.editor-canvas [data-element-id=${id}]`).click({modifiers:['Shift']});await page.getByRole('button',{name:label,exact:true}).click();const result=await save();assert(check(result.pages[0].elements.filter(e=>['a','b','c'].includes(e.id))),label);}
+]) {await load(fixture);await page.locator('.editor-canvas [data-element-id=a]').click();for(const id of ['b','c'])await page.locator(`.editor-canvas [data-element-id=${id}]`).click({modifiers:['Control']});await page.getByRole('button',{name:label,exact:true}).click();const result=await save();assert(check(result.pages[0].elements.filter(e=>['a','b','c'].includes(e.id))),label);}
 // A real panel drag follows interior content, in addition to the numeric resize above.
 await load(fixture);const panelBox=await page.locator('.editor-canvas [data-element-id=panel]').boundingBox();await page.mouse.move(panelBox.x+10,panelBox.y+10);await page.mouse.down();await page.mouse.move(panelBox.x+42,panelBox.y+34,{steps:5});await page.mouse.up();data=await save();const movedPanel=data.pages[0].elements.find(e=>e.id==='panel'), movedA=data.pages[0].elements.find(e=>e.id==='a');assert(movedPanel.x>40);assert.equal(movedA.x-80,movedPanel.x-40);assert.equal(movedA.y-140,movedPanel.y-60);
 // Reset fixture; hold cancel, accumulating stroke, completed state, tap suppression.
@@ -42,8 +42,15 @@ await load(fixture);await page.getByRole('button',{name:'プレビュー',exact:
 let hold=page.locator('.preview [data-element-id=a] button.av-button');let box=await hold.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.waitForTimeout(300);const progress=page.getByRole('progressbar',{name:'長押し進捗'});const first=Number(await progress.getAttribute('aria-valuenow'));assert(first>0&&first<90);await page.waitForTimeout(200);assert(Number(await progress.getAttribute('aria-valuenow'))>first);await page.screenshot({path:'test-results/hold-progress.png'});await page.mouse.move(1,1);await page.mouse.up();assert.equal(await page.getByRole('progressbar').count(),0);assert.equal(await page.locator('.preview input[type=range]').inputValue(),'65');
 await hold.click({delay:1150});assert.equal(await page.locator('.preview input[type=range]').inputValue(),'90');
 await page.getByRole('button',{name:'編集へ戻る',exact:true}).click();
-// Count-driven template and state persistence.
-await page.getByRole('spinbutton',{name:'映像数',exact:true}).fill('5');await page.getByRole('spinbutton',{name:'音声チャンネル数',exact:true}).fill('2');await page.getByRole('button',{name:'AVテンプレートを追加',exact:true}).click();data=await save();const source=data.pages[0].elements.find(e=>e.type==='sourceSelector');assert.equal(source.props.options.length,5);assert.equal(data.pages[0].elements.filter(e=>e.type==='volume').length,3);await load(data);assert.equal((await save()).pages[0].elements.find(e=>e.id===source.id).props.options.length,5);
+// Left templates prompt only on demand and never mix video/audio components.
+assert.equal(await page.getByRole('spinbutton',{name:'映像数',exact:true}).count(),0);
+await page.getByRole('button',{name:'映像選択テンプレート',exact:true}).click();
+await page.getByRole('spinbutton',{name:'映像数',exact:true}).fill('5');await page.getByRole('button',{name:'追加する',exact:true}).click();
+data=await save();const source=data.pages[0].elements.find(e=>e.type==='sourceSelector');assert.equal(source.props.options.length,5);assert.equal(data.pages[0].elements.filter(e=>e.type==='volume').length,1);
+assert.equal(await page.getByRole('spinbutton',{name:'映像数',exact:true}).count(),0);
+await page.getByRole('button',{name:'音声テンプレート',exact:true}).click();await page.getByRole('spinbutton',{name:'音声チャンネル数',exact:true}).fill('2');await page.getByRole('button',{name:'追加する',exact:true}).click();data=await save();assert.equal(data.pages[0].elements.filter(e=>e.type==='volume').length,3);const addedAudio=data.pages[0].elements.filter(e=>e.type==='volume'&&e.id!=='meter');assert(addedAudio.every(e=>e.props.muteStateKey));
+await load(data);assert.equal((await save()).pages[0].elements.find(e=>e.id===source.id).props.options.length,5);
+await page.getByRole('button',{name:'プレビュー',exact:true}).click();for(const e of addedAudio){const mute=page.locator(`[data-element-id="${e.id}"] button`);await mute.click();assert.match(await mute.innerText(),/ミュート中/);await mute.click();assert.equal(await mute.getAttribute('aria-pressed'),'false');}await page.getByRole('button',{name:'編集へ戻る',exact:true}).click();
 await page.screenshot({path:'test-results/editor.png',fullPage:true});
 // Export ZIP contains standalone runtime with identical long-press renderer.
 await load(fixture);const pending=page.waitForEvent('download');await page.getByRole('button',{name:'HTML出力',exact:true}).click();const zip=await pending;await zip.saveAs('test-results/runtime.zip');

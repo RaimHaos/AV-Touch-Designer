@@ -67,7 +67,7 @@ export function addTemplate(p: Project,id:string,video:number,audio:number,uid:(
   if(width<300||height>bounds.height-32) throw Error('テンプレートが収まりません。チャンネル数を減らすか画面を広げてください');
   const top=Math.max(0,...c.elements.map(e=>e.zIndex))+1;
   const make=(type:string,x:number,y:number,w:number,h:number,props:Record<string,unknown>,z:number):Element=>({id:uid('el'),type,x,y,width:w,height:h,zIndex:z,locked:false,props,interactions:{}});
-  const items:Element[]=[make('panel',16,16,width,height,{title:'AV部品テンプレート',responsive:true},top)];
+  const items:Element[]=[make('panel',16,16,width,height,{title:video?'映像選択':'音声',responsive:true},top)];
   const definitions:Record<string,unknown>[]=[];
   let y=80;
   if(video){const key=uid('video');definitions.push({key,type:'string',initialValue:'input_1'});items.push(make('sourceSelector',32,y,width-32,112,{stateKey:key,columns:Math.min(video,4),options:Array.from({length:video},(_,i)=>({label:`映像 ${i+1}`,value:`input_${i+1}`}))},top+1));y+=132;}

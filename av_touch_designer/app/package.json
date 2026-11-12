@@ -6,7 +6,7 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
-    "test:e2e": "node tests/browser.mjs",
+    "test:e2e": "node tests/browser.mjs && node tests/workflows.mjs",
     "start": "python3 -m http.server 4173 --bind 0.0.0.0 --directory dist",
     "package": "npm run build && node scripts/package.mjs"
   },

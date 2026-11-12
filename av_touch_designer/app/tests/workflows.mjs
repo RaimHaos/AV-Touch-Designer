@@ -1,0 +1,43 @@
+import {chromium,expect} from '@playwright/test';
+import assert from 'node:assert/strict';
+import {readFile,mkdir} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+const fixture=JSON.parse(await readFile('../examples/sample-project-v2.json','utf8'));fixture.pages[0].elements=[];
+const load=async data=>{await page.locator('input[type=file]').setInputFiles({name:'test.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(data))});await page.waitForTimeout(100)};
+const save=async()=>{const pending=page.waitForEvent('download');await page.getByRole('button',{name:'JSON保存',exact:true}).click();return JSON.parse(await readFile(await (await pending).path(),'utf8'))};
+const add=async(kind,count)=>{await page.getByRole('button',{name:kind==='video'?'映像選択テンプレート':'音声テンプレート',exact:true}).click();await page.getByRole('spinbutton',{name:kind==='video'?'映像数':'音声チャンネル数',exact:true}).fill(String(count));await page.getByRole('button',{name:'追加する',exact:true}).click()};
+try{
+await page.goto('http://127.0.0.1:4173');await mkdir('test-results',{recursive:true});
+await page.screenshot({path:'test-results/organized-editor.png'});
+assert.equal(await page.getByRole('spinbutton',{name:'映像数',exact:true}).count(),0);
+await load(fixture);let before=await save();await page.getByRole('button',{name:'映像選択テンプレート',exact:true}).click();assert.equal(await page.getByRole('dialog').count(),1);
+await expect(page.getByRole('spinbutton',{name:'映像数',exact:true})).toBeFocused();await page.screenshot({path:'test-results/template-dialog.png'});
+await page.keyboard.press('Escape');assert.equal(await page.getByRole('dialog').count(),0);await expect(page.getByRole('button',{name:'映像選択テンプレート',exact:true})).toBeFocused();assert.deepEqual(await save(),before);
+await add('video',4);let data=await save();assert.equal(data.pages[0].elements.filter(e=>e.type==='volume').length,0);let source=data.pages[0].elements.find(e=>e.type==='sourceSelector');
+await page.getByRole('button',{name:'プレビュー',exact:true}).click();await page.getByRole('button',{name:'映像 3',exact:true}).click();assert.equal(await page.getByRole('button',{name:'映像 3',exact:true}).getAttribute('aria-pressed'),'true');await page.getByRole('button',{name:'編集へ戻る',exact:true}).click();
+// All inspector tabs expose just one panel; keyboard tabs work and don't nudge canvas.
+await page.locator(`.editor-canvas [data-element-id="${source.id}"]`).click();
+for(const name of ['部品','動作','外観','状態','基本']){await page.getByRole('tab',{name,exact:true}).click();assert.equal(await page.locator('.inspector [role=tabpanel]:visible').count(),1);}
+await page.getByRole('tab',{name:'基本',exact:true}).focus();await page.keyboard.press('ArrowRight');await expect(page.getByRole('tab',{name:'部品',exact:true})).toBeFocused();assert.equal(await page.getByRole('tab',{name:'部品',exact:true}).getAttribute('aria-selected'),'true');
+// Audio-only generates mute for every channel. Compact editor buttons stay inside cards.
+await load(fixture);await add('audio',2);data=await save();const audio=data.pages[0].elements.filter(e=>e.type==='volume');assert.equal(audio.length,2);assert.equal(data.pages[0].elements.filter(e=>e.type==='sourceSelector').length,0);
+for(const item of audio){const card=page.locator(`.editor-canvas [data-element-id="${item.id}"]`);const mute=card.getByRole('button',{name:'ミュート',exact:true});await expect(mute).toBeVisible();const b=await mute.boundingBox(),c=await card.boundingBox();assert(b.y+b.height<=c.y+c.height+1);}
+await page.getByRole('button',{name:'プレビュー',exact:true}).click();for(const item of audio){const card=page.locator(`.preview [data-element-id="${item.id}"]`);await card.getByRole('button',{name:'ミュート',exact:true}).click();assert.equal(await card.getByRole('button',{name:/ミュート中/}).getAttribute('aria-pressed'),'true');}await page.getByRole('button',{name:'編集へ戻る',exact:true}).click();
+// Count/fit error stays in dialog and cancel is atomic.
+before=await save();await page.getByRole('button',{name:'音声テンプレート',exact:true}).click();await page.getByRole('spinbutton',{name:'音声チャンネル数'}).fill('8');await page.getByRole('button',{name:'追加する',exact:true}).click();await expect(page.getByRole('dialog').getByRole('alert')).toContainText('収まり');await page.getByRole('button',{name:'キャンセル',exact:true}).click();assert.deepEqual(await save(),before);
+// Power template brings its own state and a horizontally centered confirmation popup.
+await load(fixture);await page.getByRole('button',{name:'電源テンプレート',exact:true}).click();data=await save();const power=data.pages[0].elements.find(e=>e.type==='powerControl');const popup=data.popups.find(p=>p.id===power.props.popupId);assert(popup);const title=popup.elements.find(e=>e.type==='label'),buttons=popup.elements.filter(e=>e.type==='button').sort((a,b)=>a.x-b.x);assert.equal(title.props.align,'center');assert.equal(title.x+title.width/2,popup.width/2);assert.equal(buttons[0].x,popup.width-buttons[1].x-buttons[1].width);
+await page.getByRole('button',{name:'プレビュー',exact:true}).click();await page.getByRole('button',{name:/電源 OFF/}).click({delay:2150});await expect(page.getByRole('dialog')).toBeVisible();await page.screenshot({path:'test-results/power-confirmation.png'});await page.getByRole('button',{name:'OFFにする',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);await expect(page.getByRole('button',{name:/電源 ON/})).toBeVisible();await page.getByRole('button',{name:'編集へ戻る',exact:true}).click();
+// Two instances never share control state or popup IDs.
+await page.getByRole('button',{name:'電源テンプレート',exact:true}).click();data=await save();const powers=data.pages[0].elements.filter(e=>e.type==='powerControl');assert.equal(new Set(powers.map(e=>e.props.powerStateKey)).size,2);assert.equal(new Set(powers.map(e=>e.props.popupId)).size,2);
+// Ctrl toggles selection in both canvas and layer list; Shift alone does not add.
+await load({...fixture,pages:[{...fixture.pages[0],elements:[{id:'one',type:'button',x:100,y:100,width:160,height:80,zIndex:1,locked:false,props:{text:'一番'},interactions:{}},{id:'two',type:'button',x:400,y:100,width:160,height:80,zIndex:2,locked:false,props:{text:'二番'},interactions:{}}]}]});
+for(const id of ['one','two'])await page.locator(`.editor-canvas [data-element-id=${id}]`).click({modifiers:id==='two'?['Control']:[]});assert.match(await page.locator('.canvas-footer').innerText(),/2個/);await page.locator('.editor-canvas [data-element-id=two]').click({modifiers:['Control']});assert.match(await page.locator('.canvas-footer').innerText(),/1個/);await page.locator('.editor-canvas [data-element-id=two]').click({modifiers:['Shift']});assert.match(await page.locator('.canvas-footer').innerText(),/1個/);
+const layer=page.locator('.sidebar-left').getByRole('button',{name:/一番/});await layer.click({modifiers:['Control']});assert.match(await page.locator('.canvas-footer').innerText(),/2個/);await layer.click({modifiers:['Control']});assert.match(await page.locator('.canvas-footer').innerText(),/1個/);
+await page.getByRole('tab',{name:'配置',exact:true}).click();await page.screenshot({path:'test-results/ribbon-layout.png'});
+// Export stays runtime-only with functional audio mute and centered power dialog.
+await load(fixture);await add('audio',1);data=await save();const volume=data.pages[0].elements.find(e=>e.type==='volume');await page.getByRole('button',{name:'電源テンプレート',exact:true}).click();const pending=page.waitForEvent('download');await page.getByRole('button',{name:'HTML出力',exact:true}).click();const zip=await pending;await zip.saveAs('test-results/ui-runtime.zip');const html=execFileSync('unzip',['-p','test-results/ui-runtime.zip','index.html'],{encoding:'utf8',maxBuffer:4*1024*1024});const runtime=await browser.newPage({viewport:{width:1280,height:800}});runtime.on('pageerror',e=>errors.push(e.message));await runtime.setContent(html);await runtime.locator(`[data-element-id="${volume.id}"]`).getByRole('button',{name:'ミュート',exact:true}).click();await expect(runtime.getByRole('button',{name:/ミュート中/})).toBeVisible();await runtime.getByRole('button',{name:/電源 OFF/}).click({delay:2150});await expect(runtime.getByRole('dialog')).toBeVisible();assert.equal(await runtime.getByRole('tab').count(),0);await runtime.close();
+assert.deepEqual(errors,[]);console.log('PASS: contextual templates / cancel and focus / tabs / mute / power / Ctrl toggle / standalone export');
+}finally{await browser.close()}
