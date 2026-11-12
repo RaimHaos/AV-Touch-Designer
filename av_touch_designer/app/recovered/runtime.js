@@ -33002,6 +33002,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           stateKey: Ie,
           muteStateKey: Ie,
           showValue: S.boolean().optional(),
+          orientation:S.enum(["horizontal","vertical"]).optional(),
         }),
       }),
       S.object({
@@ -33009,6 +33010,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         type: S.literal("cameraPreset"),
         props: S.object({
           cameraLabel: S.string(),
+          columns:S.number().int().min(1).max(12).optional(),
           options: S.array(I6.extend({ id: et }))
             .min(1)
             .max(12),
@@ -33082,7 +33084,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       panel: [80, 60],
       navigation: [64, 44],
       sourceSelector: [200, 80],
-      volume: [240, 96],
+      volume: [96, 96],
       sceneSelector: [200, 80],
       cameraPreset: [240, 120],
       ptzPad: [220, 220],
@@ -33215,7 +33217,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           s++;
           let D = `${p}.elements.${A}`;
           (o(I.id, `${D}.id`), m.add(I.id), f.set(I.id, g.id));
-          let [pe, B] = cj[I.type];
+          let [pe,B]=I.type==="volume"?(I.props.orientation==="vertical"?[96,240]:[240,96]):cj[I.type];
           (I.x + I.width > _ ||
             I.y + I.height > T ||
             I.width < pe ||
@@ -33698,6 +33700,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         return (0, Z.jsxs)("div", {
           className: "av-volume",
           "data-compact": e.height < 160,
+          "data-orientation":e.props.orientation??"horizontal",
+          style:{"--value":`${u}%`},
           children: [
             (0, Z.jsxs)("div", {
               className: "av-volume-head",
@@ -33781,6 +33785,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
             }),
             (0, Z.jsx)("div", {
               className: "av-options presets",
+              style:{gridTemplateColumns:`repeat(${e.props.columns??Math.min(2,e.props.options.length)},minmax(0,1fr))`},
               children: e.props.options.map((u) =>
                 (0, Z.jsx)(
                   "div",
@@ -33965,6 +33970,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               className: "av-element",
               "data-element-id": l.id,
               "data-element-type": l.type,
+              "data-custom-fill":l.styleOverrides?.fillToken?true:undefined,
+              "data-custom-text":l.styleOverrides?.colorToken?true:undefined,
               style: vj(l),
               children: (0, Z.jsx)(pj, {
                 element: l,
@@ -33999,7 +34006,9 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       color: e.styleOverrides?.colorToken
         ? `var(--${e.styleOverrides.colorToken})`
         : void 0,
-      background: e.styleOverrides?.fillToken
+      "--component-fill":e.styleOverrides?.fillToken?`var(--${e.styleOverrides.fillToken})`:undefined,
+      "--component-text":e.styleOverrides?.colorToken?`var(--${e.styleOverrides.colorToken})`:undefined,
+      background: e.type==="label"&&e.styleOverrides?.fillToken
         ? `var(--${e.styleOverrides.fillToken})`
         : void 0,
     };

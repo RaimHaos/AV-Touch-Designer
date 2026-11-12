@@ -33006,6 +33006,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           stateKey: Ve,
           muteStateKey: Ve,
           showValue: A.boolean().optional(),
+          orientation:A.enum(["horizontal","vertical"]).optional(),
         }),
       }),
       A.object({
@@ -33013,6 +33014,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         type: A.literal("cameraPreset"),
         props: A.object({
           cameraLabel: A.string(),
+          columns:A.number().int().min(1).max(12).optional(),
           options: A.array(x5.extend({ id: Et }))
             .min(1)
             .max(12),
@@ -33086,7 +33088,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       panel: [80, 60],
       navigation: [64, 44],
       sourceSelector: [200, 80],
-      volume: [240, 96],
+      volume: [96, 96],
       sceneSelector: [200, 80],
       cameraPreset: [240, 120],
       ptzPad: [220, 220],
@@ -33220,7 +33222,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           c++;
           let N = `${v}.elements.${T}`;
           (a(D.id, `${N}.id`), d.add(D.id), f.set(D.id, h.id));
-          let [U, j] = C3[D.type];
+          let [U,j]=D.type==="volume"?(D.props.orientation==="vertical"?[96,240]:[240,96]):C3[D.type];
           (D.x + D.width > E ||
             D.y + D.height > z ||
             D.width < U ||
@@ -35516,6 +35518,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         return (0, V.jsxs)("div", {
           className: "av-volume",
           "data-compact": e.height < 160,
+          "data-orientation":e.props.orientation??"horizontal",
+          style:{"--value":`${o}%`},
           children: [
             (0, V.jsxs)("div", {
               className: "av-volume-head",
@@ -35595,6 +35599,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
             }),
             (0, V.jsx)("div", {
               className: "av-options presets",
+              style:{gridTemplateColumns:`repeat(${e.props.columns??Math.min(2,e.props.options.length)},minmax(0,1fr))`},
               children: e.props.options.map((o) =>
                 (0, V.jsx)(
                   "div",
@@ -35779,6 +35784,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               className: "av-element",
               "data-element-id": l.id,
               "data-element-type": l.type,
+              "data-custom-fill":l.styleOverrides?.fillToken?true:undefined,
+              "data-custom-text":l.styleOverrides?.colorToken?true:undefined,
               style: Z3(l),
               children: (0, V.jsx)(L3, {
                 element: l,
@@ -35813,7 +35820,9 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       color: e.styleOverrides?.colorToken
         ? `var(--${e.styleOverrides.colorToken})`
         : void 0,
-      background: e.styleOverrides?.fillToken
+      "--component-fill":e.styleOverrides?.fillToken?`var(--${e.styleOverrides.fillToken})`:undefined,
+      "--component-text":e.styleOverrides?.colorToken?`var(--${e.styleOverrides.colorToken})`:undefined,
+      background: e.type==="label"&&e.styleOverrides?.fillToken
         ? `var(--${e.styleOverrides.fillToken})`
         : void 0,
     };
@@ -36894,7 +36903,7 @@ SOFTWARE.
   function SA(e, t, n, u, r, i, a) {
     if (e.locked) return e;
     let o = (p) => (a ? Math.round(p / 8) * 8 : Math.round(p)),
-      [l, s] = C3[e.type];
+      [l,s]=e.type==="volume"?(e.props.orientation==="vertical"?[96,240]:[240,96]):C3[e.type];
     if (!u)
       return {
         ...e,
@@ -37232,81 +37241,12 @@ SOFTWARE.
       value: "\u5024",
       id: "ID",
     };
-  function xN({ name: e, value: t, onChange: n, p: u }) {
-    let r = {
-        variant: ["default", "primary", "danger"],
-        align: ["left", "center", "right"],
-        weight: ["normal", "bold"],
-        colorToken: ["text", "mutedText", "accent", "danger", "success"],
-        fillToken: ["surface", "surfaceRaised", "accent", "danger"],
-        indicator: ["outline", "bar", "circle", "none"],
-        icon: [
-          "",
-          "laptop",
-          "monitor",
-          "radio-tower",
-          "disc",
-          "camera",
-          "speaker",
-          "microphone",
-          "power",
-        ],
-      },
-      i =
-        e === "targetPageId"
-          ? u.pages.map((a) => [a.id, a.name])
-          : e === "popupId"
-            ? u.popups.map((a) => [a.id, a.name])
-            : e === "stateKey" ||
-                e.endsWith("StateKey") ||
-                ["pan", "tilt", "zoom"].includes(e)
-              ? u.stateDefinitions.map((a) => [a.key, a.key])
-              : void 0;
-    return (0, P.jsxs)("label", {
-      children: [
-        _N[e] ?? e,
-        i
-          ? (0, P.jsx)("select", {
-              value: String(t),
-              onChange: (a) => n(a.target.value),
-              children: i.map(([a, o]) =>
-                (0, P.jsx)("option", { value: a, children: o }, a),
-              ),
-            })
-          : r[e]
-            ? (0, P.jsx)("select", {
-                value: String(t),
-                onChange: (a) => n(a.target.value),
-                children: r[e].map((a) =>
-                  (0, P.jsx)(
-                    "option",
-                    { value: a, children: a || "\u306A\u3057" },
-                    a,
-                  ),
-                ),
-              })
-            : typeof t == "boolean"
-              ? (0, P.jsx)("input", {
-                  type: "checkbox",
-                  checked: t,
-                  onChange: (a) => n(a.target.checked),
-                })
-              : typeof t == "number"
-                ? (0, P.jsx)(
-                    X3,
-                    {
-                      value: String(t),
-                      type: "number",
-                      onCommit: (a) => n(Number(a)),
-                    },
-                    String(t),
-                  )
-                : (0, P.jsx)("input", {
-                    value: String(t),
-                    onChange: (a) => n(a.target.value),
-                  }),
-      ],
-    });
+  function xN({name:e,value:t,onChange:n,p:u,componentType}) {
+    const choices={variant:["default","primary","danger"],align:["left","center","right"],weight:["normal","bold"],colorToken:["text","mutedText","accent","danger","success"],fillToken:["surface","surfaceRaised","accent","danger"],indicator:["outline","bar","circle","none"],icon:["","laptop","monitor","radio-tower","disc","camera","speaker","microphone","power"]};
+    const state=e==="stateKey"||e.endsWith("StateKey")||["pan","tilt","zoom"].includes(e);
+    const expectedType=["muteStateKey","powerStateKey"].includes(e)?"boolean":["pan","tilt","zoom"].includes(e)||(e==="stateKey"&&componentType==="volume")?"number":e==="registrationStateKey"?"string":undefined;
+    const opts=e==="targetPageId"?u.pages.map(p=>[p.id,p.name]):e==="popupId"?u.popups.map(p=>[p.id,p.name]):choices[e]?.map(v=>[v,v||"なし"]);
+    return (0,P.jsxs)("label",{children:[_N[e]??e,state?(0,P.jsx)(StatePicker,{project:u,value:String(t),onChange:n,label:_N[e]??e,expectedType}):opts?(0,P.jsx)("select",{value:String(t),onChange:event=>n(event.target.value),children:opts.map(([value,label])=>(0,P.jsx)("option",{value,children:label},value))}):typeof t==="boolean"?(0,P.jsx)("input",{type:"checkbox",checked:t,onChange:event=>n(event.target.checked)}):typeof t==="number"?(0,P.jsx)(X3,{value:String(t),type:"number",onCommit:value=>n(Number(value))},String(t)):(0,P.jsx)("input",{value:String(t),onChange:event=>n(event.target.value)})]});
   }
   function X3({ value: e, onCommit: t, type: n = "text" }) {
     let [u, r] = (0, _i.useState)(e);
@@ -37328,7 +37268,7 @@ SOFTWARE.
     let i = (o, l) => r({ ...u, [o]: l }),
       a = (o, l) =>
         Object.entries(o)
-          .filter(([s]) => o !== u || !["text", "title"].includes(s))
+          .filter(([s]) => o !== u || !["text", "title", "columns", "orientation"].includes(s))
           .map(([s, c]) =>
             typeof c == "string" ||
             typeof c == "number" ||
@@ -37337,6 +37277,7 @@ SOFTWARE.
                   xN,
                   {
                     p: e,
+                    componentType:t.type,
                     name: s,
                     value: c,
                     onChange: (d) => l({ ...o, [s]: d }),
@@ -37465,33 +37406,7 @@ SOFTWARE.
                       ? "\u8868\u793A\u6761\u4EF6"
                       : "\u7121\u52B9\u6761\u4EF6",
                 }),
-                (0, P.jsxs)("select", {
-                  "aria-label":
-                    o === "visibleWhen"
-                      ? "\u8868\u793A\u72B6\u614B\u30AD\u30FC"
-                      : "\u7121\u52B9\u72B6\u614B\u30AD\u30FC",
-                  value: l?.stateKey ?? "",
-                  onChange: (s) => {
-                    let c = e.stateDefinitions.find(
-                      (d) => d.key === s.target.value,
-                    );
-                    n({
-                      ...t,
-                      [o]: c
-                        ? { stateKey: c.key, equals: c.initialValue }
-                        : void 0,
-                    });
-                  },
-                  children: [
-                    (0, P.jsx)("option", {
-                      value: "",
-                      children: "\u6761\u4EF6\u306A\u3057",
-                    }),
-                    e.stateDefinitions.map((s) =>
-                      (0, P.jsx)("option", { children: s.key }, s.key),
-                    ),
-                  ],
-                }),
+                (0,P.jsx)(StatePicker,{project:e,value:l?.stateKey??"",allowEmpty:true,label:o==="visibleWhen"?"表示状態キー":"無効状態キー",onChange:key=>{const definition=e.stateDefinitions.find(d=>d.key===key);n({...t,[o]:definition?{stateKey:key,equals:definition.initialValue}:undefined})}}),
                 l &&
                   (0, P.jsxs)(P.Fragment, {
                     children: [
@@ -37568,7 +37483,8 @@ SOFTWARE.
             "details",
             {
               children: [
-                (0, P.jsxs)("summary", { children: [o.key, " \xB7 ", o.type] }),
+                (0,P.jsxs)("summary",{children:[AVLayout.stateChoices(e).find(s=>s.key===o.key)?.label??o.key," · ",({number:"数値",boolean:"ON/OFF",string:"文字列"})[o.type]]}),
+                (0,P.jsx)("code",{className:"state-definition-key",children:o.key}),
                 (0, P.jsxs)("label", {
                   children: [
                     "\u521D\u671F\u5024",
@@ -37825,43 +37741,7 @@ SOFTWARE.
                         "stateKey" in l &&
                           (0, ne.jsxs)(ne.Fragment, {
                             children: [
-                              (0, ne.jsx)("select", {
-                                "aria-label": "\u53C2\u7167\u72B6\u614B",
-                                value: l.stateKey,
-                                onChange: (c) => {
-                                  let d = e.stateDefinitions.find(
-                                    (f) => f.key === c.target.value,
-                                  );
-                                  o(
-                                    a.map((f, m) =>
-                                      m === s
-                                        ? {
-                                            ...l,
-                                            stateKey: d.key,
-                                            ...("value" in l
-                                              ? { value: d.initialValue }
-                                              : {}),
-                                          }
-                                        : f,
-                                    ),
-                                  );
-                                },
-                                children: e.stateDefinitions
-                                  .filter((c) =>
-                                    l.type === "toggle"
-                                      ? c.type === "boolean"
-                                      : l.type === "increment"
-                                        ? c.type === "number"
-                                        : !0,
-                                  )
-                                  .map((c) =>
-                                    (0, ne.jsx)(
-                                      "option",
-                                      { children: c.key },
-                                      c.key,
-                                    ),
-                                  ),
-                              }),
+                              (0,ne.jsx)(StatePicker,{project:e,value:l.stateKey,label:"参照状態",expectedType:l.type==="toggle"?"boolean":l.type==="increment"?"number":undefined,onChange:key=>{const d=e.stateDefinitions.find(d=>d.key===key);o(a.map((f,m)=>m===s?{...l,stateKey:key,...("value" in l?{value:d.initialValue}:{})}:f))}}),
                               "value" in l &&
                                 (0, ne.jsx)(Bu, {
                                   ariaLabel: "\u64CD\u4F5C\u5024",
@@ -38926,6 +38806,8 @@ SOFTWARE.
                                 className: `av-element ${p.includes(b.id) ? "selection" : ""}`,
                                 "data-element-id": b.id,
                                 "data-element-type": b.type,
+                                "data-custom-fill":b.styleOverrides?.fillToken?true:undefined,
+                                "data-custom-text":b.styleOverrides?.colorToken?true:undefined,
                                 style: {
                                   ...Z3(b),
                                   visibility:
@@ -38981,6 +38863,7 @@ SOFTWARE.
                 }),
                 (0, w.jsxs)(InspectorTabs, {
                   children: [
+                    (0,w.jsx)(ComponentLayout,{project:l,containerId:d.id,element:we,commit:next=>Yt(AVLayout.reflow(l,next))}),
 
                     (0, w.jsx)("h2", {
                       children: we
@@ -39200,25 +39083,7 @@ SOFTWARE.
                             ),
                           ],
                         }),
-                    (0, w.jsx)("h2", { children: "\u30C6\u30FC\u30DE" }),
-                    (0, w.jsxs)("select", {
-                      "aria-label": "\u30C6\u30FC\u30DE",
-                      value: l.themeId,
-                      onChange: (b) =>
-                        ue((C) => ({ ...C, themeId: b.target.value })),
-                      children: [
-                        (0, w.jsx)("option", {
-                          value: "modern-dark",
-                          children: "Modern Dark",
-                        }),
-                        (0, w.jsx)("option", {
-                          value: "minimal-light",
-                          children: "Minimal Light",
-                        }),
-                        (0,w.jsx)("option",{value:"navy-blue",children:"Navy Blue"}),
-                        (0,w.jsx)("option",{value:"warm-light",children:"Warm Light"}),
-                      ],
-                    }),
+                    (0,w.jsx)(ComponentAppearance,{element:we,onChange:patch=>Ne(we.id,patch)}),
                     (0, w.jsx)("h2", { children: "\u72B6\u614B\u5B9A\u7FA9" }),
                     (0, w.jsx)(UA, { project: l, onChange: Yt }),
                     (0, w.jsx)("h2", { children: "\u64CD\u4F5C" }),

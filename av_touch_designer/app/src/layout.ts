@@ -112,3 +112,47 @@ export function addStartup(p:Project,targetId:string,uid:(prefix?:string)=>strin
   next.startPageId=startup.id;
   return {project:next,pageId:startup.id};
 }
+
+/** Change presentation only; state bindings, options and event actions stay intact. */
+export function changeComponentLayout(p:Project,containerId:string,id:string,layout:string|number):Project {
+ const c=container(p,containerId),e=c.elements.find(e=>e.id===id);
+ if(!e)throw Error('部品がありません');if(e.locked)throw Error('ロックを解除してからレイアウトを変更してください');
+ const bounds=(p.popups.find(c=>c.id===containerId) as {width:number;height:number}|undefined)??p.canvas;
+ let props={...e.props},width=e.width,height=e.height;
+ if(['sourceSelector','sceneSelector','cameraPreset'].includes(e.type)){
+  const count=Array.isArray(props.options)?props.options.length:1;const cols=Number(layout);
+  if(!Number.isInteger(cols)||cols<1||cols>count)throw Error('列数は選択肢の数以内で指定してください');
+  const oldCols=Number(props.columns??(e.type==='cameraPreset'?Math.min(2,count):count)),oldRows=Math.ceil(count/oldCols);
+  props.columns=cols;const rows=Math.ceil(count/cols),padding=e.type==='cameraPreset'?88:0;
+  width=Math.max(width,cols*64+(cols-1)*12+(padding?48:0));const minRowHeight=Array.isArray(props.options)&&props.options.some(o=>o&&typeof o==="object"&&"icon" in o&&o.icon)?112:76;
+  const rowHeight=Math.max(minRowHeight,Math.ceil((height-padding-(oldRows-1)*12)/oldRows));
+  height=rows*rowHeight+(rows-1)*12+padding;
+ }else if(e.type==='volume'){
+  if(layout!=='horizontal'&&layout!=='vertical')throw Error('フェーダーの向きが不正です');
+  if((props.orientation??'horizontal')===layout)return p;
+  props.orientation=layout;
+  if(layout==='vertical'){width=Math.max(160,Math.min(e.height,200));height=Math.max(280,Math.min(e.width,360));}
+  else {width=Math.max(320,e.height);height=Math.max(112,Math.min(e.width,180));}
+ }else throw Error('この部品はレイアウト切り替えの対象ではありません');
+ if(width>bounds.width||height>bounds.height)throw Error('変更後の部品が画面に収まりません。画面サイズや列数を調整してください');
+ const next={...e,props,width,height,x:Math.min(e.x,bounds.width-width),y:Math.min(e.y,bounds.height-height)};
+ return replace(p,containerId,c.elements.map(e=>e.id===id?next:e));
+}
+
+/** Friendly UI names keep existing opaque keys intact. */
+export function stateChoices(p:Project):{key:string;label:string;type:string}[]{
+ const aliases:Record<string,string>={selectedSource:'映像ソース',volume:'音量',muted:'ミュート',power:'システム電源',cameraPreset:'カメラプリセット',registeredPreset:'登録済みプリセット',pan:'パン',tilt:'チルト',zoom:'ズーム'};
+ const items=[...p.pages,...p.popups].flatMap(page=>page.elements.map(element=>({page,element})));
+ const seen=new Map<string,number>();
+ return p.stateDefinitions.map(d=>{
+  const key=String(d.key);let label=aliases[key];
+  if(!label){const owner=items.find(({element:e})=>['stateKey','muteStateKey','powerStateKey','selectedStateKey','registrationStateKey'].some(prop=>e.props[prop]===key));
+   if(owner){const e=owner.element,base=String(e.props.label??e.props.cameraLabel??({sourceSelector:'映像選択',sceneSelector:'シーン',powerControl:'電源',cameraPreset:'プリセット'}[e.type]??e.type));
+    const suffix=e.props.muteStateKey===key?'ミュート':e.type==='volume'?'音量':e.props.registrationStateKey===key?'登録状態':'';
+    label=`${String(owner.page.name??'ページ')} / ${base}${suffix?' / '+suffix:''}`;
+   }
+  }
+  const base=label??key,index=(seen.get(base)??0)+1;seen.set(base,index);
+  return {key,label:index>1?`${base} (${index})`:base,type:String(d.type)};
+ });
+}

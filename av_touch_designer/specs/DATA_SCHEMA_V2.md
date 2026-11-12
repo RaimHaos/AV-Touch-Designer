@@ -21,3 +21,5 @@ JSON Schema/Zod等で構造検証後、参照整合性を二段階で検証。�
 ## 起動ページとパネルテーマ（2026-11-12追加）
 
 ページの任意roleは`startup`のみ。プロジェクト内最大1件。省略時は通常ページ。起動テンプレート作成時はstartPageIdをそのページへ設定し、電源起動/停止は既存setValue/navigateアクションとして保存する。テーマIDは`modern-dark`、`minimal-light`、`navy-blue`、`warm-light`。編集UIの配色はJSONに含めず白基調固定。
+
+レイアウト用の任意フィールド: `volume.props.orientation`はhorizontal/vertical（省略時horizontal）。最小サイズは横240×96、縦96×240。`cameraPreset.props.columns`は整数1〜12（省略時2）。sourceSelector/sceneSelectorは既存columnsを使用。これらの変更は状態・イベントを変更しない。

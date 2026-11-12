@@ -46,3 +46,22 @@
 .panel-designs small {color:#64748b}
 
 .canvas-caption strong {color:#334155}
+/* State references use fixed-width, searchable cards rather than oversized native menus. */
+.state-picker {position:relative;min-width:0;margin-top:5px}
+.editor-shell .state-picker>button {display:flex;width:100%;justify-content:space-between;text-align:left;min-width:0;font-size:11px}
+.state-picker>button>span:first-child {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.state-picker-popup {position:fixed;z-index:1000;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:white;color:#334155;box-shadow:0 12px 40px #24395430;box-sizing:border-box;overflow:hidden}
+.editor-shell .state-picker-popup input {width:100%;box-sizing:border-box;margin:0;flex:none}
+.state-picker-popup [role=listbox] {overflow-y:auto;min-height:0}
+.state-picker-popup [role=option] {padding:9px 10px;border:1px solid transparent;border-radius:5px;cursor:pointer;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.5}
+.state-picker-popup [role=option].active {background:#eef4fc;border-color:#c9daf0}
+.state-picker-popup [role=option][aria-selected=true] {border-left:3px solid #2174c7;background:#e9f2ff}
+.state-option-head {display:flex;gap:12px;justify-content:space-between;align-items:start}
+.state-option-head>span {min-width:0;overflow-wrap:anywhere}
+.state-option-head small {white-space:nowrap;font-size:10px;color:#64748b;border:1px solid #d5dfe9;padding:0 5px;border-radius:4px}
+.state-picker-popup code,.state-definition-key {display:block;overflow-wrap:anywhere;white-space:normal;font-size:10px;color:#718096;line-height:1.5}
+.inspector-content summary {overflow-wrap:anywhere;line-height:1.7}
+.component-layout {padding-bottom:12px;border-bottom:1px solid #d9dde4;margin-bottom:16px}
+.component-layout .row {display:flex;gap:5px;flex-wrap:wrap}
+.editor-shell .component-layout button[aria-pressed=true] {color:#175d9f;background:#eaf2fc;border-color:#a8c6e8}
+.component-layout [role=alert] {color:#b42332}
