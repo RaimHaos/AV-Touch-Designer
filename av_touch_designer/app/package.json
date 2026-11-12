@@ -1,0 +1,19 @@
+{
+  "name": "av-touch-designer-recovered",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "node tests/browser.mjs",
+    "start": "python3 -m http.server 4173 --bind 0.0.0.0 --directory dist",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3",
+    "tsx": "4.20.6",
+    "@playwright/test": "1.56.1"
+  }
+}
