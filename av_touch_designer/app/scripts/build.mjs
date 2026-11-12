@@ -11,12 +11,13 @@ runtime=(await transform(runtime,{minify:true,target:'es2022'})).code;
 let editor=await read('recovered/editor.js');
 editor=editor.replace('__RUNTIME_BUNDLE__',()=>JSON.stringify(runtime)).replace('/* __HOLD_EDITOR__ */',bind('R3','Zn','Ln'));
 editor=editor.replace('  function RA() {',(await read('src/controls.js'))+'\n  function RA() {');
-const extra=await read('src/extra.css');
+const extra=(await read('src/extra.css'))+'\n'+(await read('src/panel-themes.css'));
+const editorLight=await read('src/editor-light.css');
 // Exported runtime receives the same progress and responsive component CSS.
 editor=editor.replace('  var dA = `','  var dA = `'+extra);
 editor=(await transform(editor,{minify:true,target:'es2022'})).code;
 const css=await read('recovered/style.css');
-const html=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>AV Touch Designer — 引継ぎ改修版</title><style>${css}\n${extra}</style></head><body><div id="root"></div><script>${layout.outputFiles[0].text}\n${editor.replace(/<\/script/gi,'<\\/script')}</script></body></html>`;
+const html=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>AV Touch Designer — 引継ぎ改修版</title><style>${css}\n${extra}\n${editorLight}</style></head><body><div id="root"></div><script>${layout.outputFiles[0].text}\n${editor.replace(/<\/script/gi,'<\\/script')}</script></body></html>`;
 await writeFile('dist/AV-Touch-Designer.html',html);
 await writeFile('dist/index.html',html);
 console.log('Built standalone editor and shared export runtime');

@@ -74,3 +74,41 @@ export function addTemplate(p: Project,id:string,video:number,audio:number,uid:(
   for(let i=0;i<audio;i++){const key=uid('audio'), mute=uid('mute');definitions.push({key,type:'number',initialValue:50,min:0,max:100,step:1},{key:mute,type:'boolean',initialValue:false});items.push(make('volume',32,y,width-32,96,{label:`音声 ${i+1}`,stateKey:key,muteStateKey:mute,showValue:true},top+1));y+=104;}
   return {project:{...replace(p,id,[...c.elements,...items]),stateDefinitions:[...p.stateDefinitions,...definitions]},ids:items.map(e=>e.id)};
 }
+
+interface Action { type:string; stateKey?:string; value?:unknown; pageId?:string; [key:string]:unknown }
+interface Interactions {onTap?:Action[]; [key:string]:unknown}
+/** Create/reuse the system standby page and wire OFF -> standby -> ON -> operating page. */
+export function addStartup(p:Project,targetId:string,uid:(prefix?:string)=>string):{project:Project;pageId:string} {
+  const next=structuredClone(p);
+  let startup=next.pages.find(page=>page.role==='startup');
+  let target=next.pages.find(page=>page.id===targetId&&page.role!=='startup');
+  const existingLaunch=startup?.elements.find(e=>e.id.startsWith('system_start_'));
+  const existingTarget=(existingLaunch?.interactions as Interactions|undefined)?.onTap?.find(a=>a.type==='navigate')?.pageId;
+  target??=next.pages.find(page=>page.id===existingTarget&&page.role!=='startup')??next.pages.find(page=>page.role!=='startup');
+  if(!target){target={id:uid('page'),name:'メイン',elements:[]};next.pages.push(target);}
+  if(!startup){
+    if(next.pages.length>=30)throw Error('起動ページを追加できません。ページ数の上限は30です。');
+    const {width:w,height:h}=next.canvas;
+    const make=(type:string,x:number,y:number,width:number,height:number,props:Record<string,unknown>,prefix='el'):Element=>({id:uid(prefix),type,x,y,width,height,zIndex:1,locked:false,props,interactions:{}});
+    const bw=Math.min(360,w-64),bh=h<400?64:88;
+    startup={id:uid('startup'),name:'システム起動',role:'startup',elements:[
+      make('label',24,Math.round(h*.20),w-48,48,{text:'SYSTEM STANDBY',fontSize:h<400?24:36,align:'center',weight:'bold'}),
+      make('label',24,Math.round(h*.20)+56,w-48,32,{text:'ボタンを押してシステムを起動してください',fontSize:h<400?12:20,align:'center',colorToken:'mutedText'}),
+      make('button',Math.round((w-bw)/2),Math.max(Math.round(h*.55),Math.round(h*.20)+96),bw,bh,{text:'システムを起動',icon:'power',variant:'primary'},'system_start')
+    ]};
+    next.pages.push(startup);
+  }
+  const keys=new Set([...next.pages,...next.popups].flatMap(page=>page.elements).filter(e=>e.type==='powerControl').map(e=>String(e.props.powerStateKey)));
+  next.stateDefinitions=next.stateDefinitions.map(d=>keys.has(String(d.key))?{...d,initialValue:false}:d);
+  let launch=startup.elements.find(e=>e.id.startsWith('system_start_'));
+  if(!launch){const width=Math.min(360,next.canvas.width-64);launch={id:uid('system_start'),type:'button',x:Math.round((next.canvas.width-width)/2),y:Math.max(Math.round(next.canvas.height*.55),Math.round(next.canvas.height*.20)+96),width,height:64,zIndex:2,locked:false,props:{text:'システムを起動',icon:'power',variant:'primary'}};startup.elements.push(launch);}
+  launch.interactions={...(launch.interactions as Interactions|undefined),onTap:[...Array.from(keys,key=>({type:'setValue',stateKey:key,value:true})),{type:'navigate',pageId:target.id}]};
+  for(const page of [...next.pages,...next.popups])for(const e of page.elements){
+    const interactions=e.interactions as Interactions|undefined;
+    if(interactions?.onTap?.some(a=>a.type==='setValue'&&a.value===false&&keys.has(String(a.stateKey)))){
+      e.interactions={...interactions,onTap:[...interactions.onTap.filter(a=>a.type!=='navigate'),{type:'navigate',pageId:startup.id}]};
+    }
+  }
+  next.startPageId=startup.id;
+  return {project:next,pageId:startup.id};
+}

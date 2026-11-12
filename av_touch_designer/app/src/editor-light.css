@@ -1,0 +1,48 @@
+/* Fixed editor chrome: never scope these rules to panel themeId. */
+.editor-shell {--ui-bg:#f3f4f6;--ui-panel:#fff;--ui-field:#fff;--ui-line:#d9dde4;--ui-muted:#647080;--ui-text:#253044;--ui-accent:#2174c7;background:var(--ui-bg);color:var(--ui-text);color-scheme:light}
+.editor-header {background:#fff}
+.brand-mark {background:#eaf2fc;border-color:#d5e4f7;color:#2467a5}
+.editor-shell :where(button):not(:where(.av-canvas button)) {color:#334155;background:#fff;border-color:#d7dce3}
+.editor-shell :where(button):not(:where(.av-canvas button)):hover {background:#eef3f9;border-color:#a7bfd9}
+.editor-shell :where(button):not(:where(.av-canvas button)):disabled {opacity:.45}
+.editor-shell .actions .preview-toggle {background:#2174c7;border-color:#2174c7;color:#fff}
+.editor-shell .actions .preview-toggle:hover {background:#195c9f;border-color:#195c9f}
+.editor-shell .actions .file-action {color:#475569;background:transparent}
+.editor-shell .actions .file-action:hover {background:#eef3f9}
+.workspace>aside {background:#fff;scrollbar-color:#c4cbd4 transparent}
+.workspace>main {background:#e9ecf1}
+.editor-shell aside h2,.editor-shell aside h3 {color:#4b5c70}
+.editor-shell aside h2:after {background:#e1e5eb}
+.editor-shell aside label,.editor-shell aside summary,.editor-shell legend {color:#526173}
+.editor-shell aside button small {color:#64748b}
+.editor-shell aside>button:hover {background:#eff4fa}
+.editor-shell aside>button.active {background:#e9f1fc;border-color:#c1d5f0;color:#1c5fa2}
+.editor-shell aside>button.active:before {background:#2174c7}
+.editor-shell :where(input):not(:where(.av-canvas input)),.editor-shell select,.editor-shell textarea {background:#fff;border-color:#cfd6df;color:#263446}
+.editor-shell .component-buttons button,.editor-shell .template-buttons button {background:#fff;border-color:#d2dae4;color:#334155}
+.editor-shell .component-buttons button:hover,.editor-shell .template-buttons button:hover {background:#eef4fc;border-color:#a9c6e5;color:#205c96}
+.editor-shell .component-buttons button .ui-icon {color:#64768c}
+.editor-shell .quick-start>button {background:#eef4fc;border-color:#c7d9ef;color:#205c96}
+.editor-ribbon {background:#fff}
+.editor-shell .tool-tabs button {background:transparent;color:#526173;border-color:transparent}
+.editor-shell .tool-tabs button[aria-selected=true] {background:#eef4fc;color:#175d9f;box-shadow:inset 0 -2px #2174c7}
+.ribbon-content label,.ribbon-hint {color:#5d6d80}
+.canvas-toolbar {background:#f8f9fb;border-color:#d9dde4;color:#526173}
+.editor-shell .canvas-toolbar input[type=number] {border-color:#cfd6df}
+.editor-shell .canvas-toolbar button[aria-pressed=true] {background:#e7f0fd;border-color:#b4cbea;color:#1d5f9e}
+.canvas-scroll {background:radial-gradient(#b6bfcd66 .8px,transparent .8px) 0 0/24px 24px;scrollbar-color:#c4cbd4 transparent}
+.canvas-footer {background:#f8f9fb!important;border-color:#d9dde4!important;color:#5d6d80!important}
+.editor-shell fieldset {border-color:#d7dfe8}
+.editor-shell .action-card,.editor-shell .option-card {background:#f7f9fc;border-color:#dde4ec}
+.editor-shell .hint {color:#64748b}
+.template-dialog {background:#fff;color:#273547;border-color:#cbd5e1;box-shadow:0 24px 90px #172c4840}
+.template-dialog h2 {color:#273547!important}
+.template-dialog [role=alert] {color:#b42332}
+.editor-shell .template-dialog button.primary {background:#2174c7!important;border-color:#2174c7!important;color:#fff!important}
+.error {background:#fff0f0;color:#9b2433;border-bottom:1px solid #f1c5c9;flex-shrink:0}
+.panel-designs {display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#526173}
+.editor-shell .panel-designs button[aria-pressed=true] {background:#eaf2fc;border-color:#6396cf;color:#175d9f}
+.design-swatch {width:30px;height:22px;border:3px solid;border-radius:4px;display:inline-block}
+.panel-designs small {color:#64748b}
+
+.canvas-caption strong {color:#334155}

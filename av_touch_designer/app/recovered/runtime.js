@@ -33039,7 +33039,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         }),
       }),
     ]),
-    k6 = S.object({ id: et, name: S.string(), elements: S.array(lj).max(500) }),
+    k6 = S.object({ id: et, name: S.string(), role:S.literal("startup").optional(), elements: S.array(lj).max(500) }),
     W$ = S.object({
       schemaVersion: S.literal(2),
       initialState: S.never().optional(),
@@ -33049,7 +33049,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         width: S.number().int().min(320).max(3840),
         height: S.number().int().min(240).max(2160),
       }),
-      themeId: S.enum(["modern-dark", "minimal-light"]),
+      themeId: S.enum(["modern-dark", "minimal-light", "navy-blue", "warm-light"]),
       startPageId: et,
       pages: S.array(k6).min(1).max(30),
       popups: S.array(
@@ -33746,7 +33746,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                       onClick: () =>
                         a([{ type: "toggle", stateKey: e.props.muteStateKey }]),
                       children: l
-                        ? "\u30DF\u30E5\u30FC\u30C8\u4E2D \u2713"
+                        ? "\u30DF\u30E5\u30FC\u30C8\u4E2D"
                         : "\u30DF\u30E5\u30FC\u30C8",
                     }),
                   ],
@@ -33820,15 +33820,6 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                           className: `av-button ${t[e.props.selectedStateKey] === u.value ? "selected" : ""}`,
                           children: [
                             u.label,
-                            t[e.props.selectedStateKey] === u.value &&
-                              (0, Z.jsx)("span", {
-                                className: "selection-indicator",
-                                "aria-hidden": "true",
-                                children: (0, Z.jsx)(tr, {
-                                  name: "check",
-                                  size: 12,
-                                }),
-                              }),
                           ],
                         }),
                   },

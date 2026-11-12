@@ -1,0 +1,9 @@
+/* Panel-only tokens and geometry. The editor does not consume these variables. */
+.navy-blue {--background:#101d38;--surface:#1a2f55;--surfaceRaised:#263f67;--text:#f6f9ff;--mutedText:#b6c9e4;--accent:#80b4ff;--accentText:#10203a;--border:#48678e;--danger:#ff9b9f;--success:#80d5b4;--selectedSurface:#294c7c;--dangerSurface:#442b40;--shadow:0 8px 24px #0002}
+.warm-light {--background:#faf7f2;--surface:#fffdf9;--surfaceRaised:#f1e9df;--text:#352b24;--mutedText:#77695d;--accent:#a95b30;--accentText:#fff;--border:#d5c6b7;--danger:#b74141;--success:#3e8060;--selectedSurface:#f9e0ca;--dangerSurface:#fce7e1;--shadow:0 4px 18px #6242220d}
+.av-canvas.navy-blue .av-button {border-radius:6px}
+.av-canvas.navy-blue .av-panel,.av-canvas.navy-blue .av-volume {border-radius:10px}
+.av-canvas.warm-light .av-button {border-radius:18px}
+.av-canvas.warm-light .av-panel,.av-canvas.warm-light .av-volume {border-radius:20px}
+/* Selection is conveyed by fill, border and text alone; no badge or pseudo icon. */
+.av-canvas .selection-indicator {display:none!important}

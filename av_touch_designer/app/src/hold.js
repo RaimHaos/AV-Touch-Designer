@@ -17,7 +17,7 @@ function RecoveredHold({children,onTap,onHold,duration=2000,indicator='outline',
     onPointerCancel:e=>{if(pointer.current===e.pointerId){cancelled.current=true;reset()}},
     onPointerUp:e=>{if(pointer.current===e.pointerId){cancelled.current=done.current;reset()}},
     onClick:e=>{if(!disabled&&(e.detail===0||(!cancelled.current&&!done.current)))onTap?.();cancelled.current=false;done.current=false},
-    children:[children,selected&&J.jsx('span',{className:'selection-indicator','aria-hidden':true,children:'✓'}),
+    children:[children,
       onHold&&progress>0&&indicator!=='none'&&J.jsx('svg',{className:'hold-progress perimeter',viewBox:`0 0 ${width} ${height}`,preserveAspectRatio:'none',role:'progressbar','aria-label':'長押し進捗','aria-valuenow':Math.round(progress*100),'aria-valuemin':0,'aria-valuemax':100,children:J.jsx('path',{d:path,pathLength:100,fill:'none',stroke:'var(--accent)',strokeWidth:4,strokeLinecap:'round',strokeDasharray:'100',strokeDashoffset:100-progress*100})})]
   }),onHold&&J.jsx('button',{className:'hold-alternative',disabled,onClick:()=>{reset();onHold()},children:'長押し操作を実行'})]});
 }

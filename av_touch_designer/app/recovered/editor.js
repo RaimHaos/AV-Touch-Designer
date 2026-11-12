@@ -33043,7 +33043,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         }),
       }),
     ]),
-    E5 = A.object({ id: Et, name: A.string(), elements: A.array(g8).max(500) }),
+    E5 = A.object({ id: Et, name: A.string(), role:A.literal("startup").optional(), elements: A.array(g8).max(500) }),
     D3 = A.object({
       schemaVersion: A.literal(2),
       initialState: A.never().optional(),
@@ -33053,7 +33053,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         width: A.number().int().min(320).max(3840),
         height: A.number().int().min(240).max(2160),
       }),
-      themeId: A.enum(["modern-dark", "minimal-light"]),
+      themeId: A.enum(["modern-dark", "minimal-light", "navy-blue", "warm-light"]),
       startPageId: Et,
       pages: A.array(E5).min(1).max(30),
       popups: A.array(
@@ -33139,6 +33139,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           r.add(p));
       },
       o = new Map(n.stateDefinitions.map((p) => [p.key, p]));
+    n.pages.filter(page=>page.role==="startup").length>1&&i("pages","システム起動ページは1つまでです");
     o.size !== n.stateDefinitions.length &&
       i(
         "stateDefinitions",
@@ -35563,7 +35564,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                       onClick: () =>
                         i([{ type: "toggle", stateKey: e.props.muteStateKey }]),
                       children: l
-                        ? "\u30DF\u30E5\u30FC\u30C8\u4E2D \u2713"
+                        ? "\u30DF\u30E5\u30FC\u30C8\u4E2D"
                         : "\u30DF\u30E5\u30FC\u30C8",
                     }),
                   ],
@@ -35576,7 +35577,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                         style: { width: `${o}%` },
                       }),
                     }),
-                    (0,V.jsx)('button',{type:'button',tabIndex:-1,className:`av-button editor-mute ${l?'selected':''}`,'aria-disabled':true,children:l?'ミュート中 ✓':'ミュート'}),
+                    (0,V.jsx)('button',{type:'button',tabIndex:-1,className:`av-button editor-mute ${l?'selected':''}`,'aria-disabled':true,children:l?'ミュート中':'ミュート'}),
                   ],
                 }),
           ],
@@ -35633,15 +35634,6 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
                           className: `av-button ${t[e.props.selectedStateKey] === o.value ? "selected" : ""}`,
                           children: [
                             o.label,
-                            t[e.props.selectedStateKey] === o.value &&
-                              (0, V.jsx)("span", {
-                                className: "selection-indicator",
-                                "aria-hidden": "true",
-                                children: (0, V.jsx)(He, {
-                                  name: "check",
-                                  size: 12,
-                                }),
-                              }),
                           ],
                         }),
                   },
@@ -35869,7 +35861,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           height: e.canvas.height,
           pixelRatio: 1,
           skipFonts: !0,
-          backgroundColor: e.themeId === "modern-dark" ? "#171c25" : "#f4f6f9",
+          backgroundColor: ({"modern-dark":"#081820","minimal-light":"#f4f6f9","navy-blue":"#101d38","warm-light":"#faf7f2"})[e.themeId],
         });
       if (!i || i.size < 100)
         throw new Error(
@@ -36798,7 +36790,7 @@ SOFTWARE.
           ),
         )),
       DA(t, e),
-      Ye(t)
+      Ye(t.pages.some(page=>page.elements.some(el=>el.type==="powerControl"))?AVLayout.addStartup(t,t.pages[0].id,vt).project:t)
     );
   }
   function Zf(e, t) {
@@ -36947,6 +36939,7 @@ SOFTWARE.
         ...e.pages,
         {
           ...n,
+          role:undefined,
           id: u,
           name: `${n.name} \u30B3\u30D4\u30FC`,
           elements: n.elements.map((i) =>
@@ -37201,7 +37194,7 @@ SOFTWARE.
           l.id === t ? { ...l, elements: [...l.elements, o] } : l,
         ),
       }),
-      { project: Ye(a), id: o.id }
+      { project: Ye(n==="powerControl"?AVLayout.addStartup(a,t,vt).project:a), id: o.id }
     );
   }
   var _i = ie(mr(), 1),
@@ -38570,7 +38563,7 @@ SOFTWARE.
             }),
           ],
         }),
-        !n&&(0,w.jsx)(EditorRibbon,{selection:p,copy:_o,paste:()=>Eo(),duplicate:xo,remove:bo,zoomFit:HA,
+        !n&&(0,w.jsx)(EditorRibbon,{themeId:l.themeId,setTheme:themeId=>ue(project=>({...project,themeId})),selection:p,copy:_o,paste:()=>Eo(),duplicate:xo,remove:bo,zoomFit:HA,
           align:mode=>{try{ue(b=>mode==='centerX'||mode==='centerY'?AVLayout.arrange(b,d.id,p,mode):Vf(b,d.id,p,mode))}catch(error){Hn(error)}},
           arrange:(mode,gap,cols)=>ue(b=>AVLayout.arrange(b,d.id,p,mode,gap,cols)),
           group:()=>ue(b=>({...b,groups:[...b.groups.filter(group=>!group.memberIds.some(id=>p.includes(id))),{id:vt('group'),memberIds:p}]})),
@@ -38658,7 +38651,7 @@ SOFTWARE.
                         ),
                       ),
                     }),
-                    (0,w.jsx)(TemplateTools,{project:l,containerId:d.id,commit:Yt,select:g,addPower:()=>W3('powerControl')}),
+                    (0,w.jsx)(TemplateTools,{project:l,containerId:d.id,commit:Yt,select:g,addPower:()=>W3('powerControl'),addStartup:()=>{try{const result=AVLayout.addStartup(l,d.id,vt);if(Yt(result.project)){c(result.pageId);g([])}}catch(error){Hn(error)}}}),
                     (0, w.jsxs)("select", {
                       "aria-label": "AV\u90E8\u54C1",
                       defaultValue: "",
@@ -39222,6 +39215,8 @@ SOFTWARE.
                           value: "minimal-light",
                           children: "Minimal Light",
                         }),
+                        (0,w.jsx)("option",{value:"navy-blue",children:"Navy Blue"}),
+                        (0,w.jsx)("option",{value:"warm-light",children:"Warm Light"}),
                       ],
                     }),
                     (0, w.jsx)("h2", { children: "\u72B6\u614B\u5B9A\u7FA9" }),
