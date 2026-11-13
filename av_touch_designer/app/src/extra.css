@@ -55,3 +55,9 @@
 .av-element[data-custom-fill=true] .av-button {background:var(--component-fill)}
 .av-element[data-custom-fill=true] .av-button.selected {background:color-mix(in srgb,var(--component-fill) 70%,var(--accent) 30%)}
 .av-element[data-custom-text=true] .av-button {color:var(--component-text)}
+
+.av-control[data-simple-group] .av-button {background:var(--simple-fill)!important;color:var(--simple-text)!important;transition:filter .08s,transform .08s}
+.av-control[data-simple-group] .av-button:active {filter:brightness(1.15);transform:translateY(1px)}
+.inspector input[type=color] {height:36px;padding:4px;cursor:pointer}
+.advanced-settings {margin-top:16px;border-top:1px solid #d7deea;padding-top:12px}
+.advanced-settings > summary {cursor:pointer;font-weight:600;margin-bottom:12px}

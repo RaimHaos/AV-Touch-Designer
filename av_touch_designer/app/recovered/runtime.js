@@ -32939,6 +32939,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       text: S.string(),
       icon: S.string().optional(),
       variant: S.enum(["default", "primary", "danger"]).optional(),
+      simple: S.object({mode:S.enum(['visual','momentary','toggle']),normalFill:S.string().regex(/^#[0-9a-fA-F]{6}$/),normalText:S.string().regex(/^#[0-9a-fA-F]{6}$/),onFill:S.string().regex(/^#[0-9a-fA-F]{6}$/),onText:S.string().regex(/^#[0-9a-fA-F]{6}$/),holdMs:S.number().int().min(0).max(10000),group:S.string().max(100),maxOn:S.number().int().min(1).max(100)}).optional(),
       selectedWhen: uj.optional(),
     },
     z6 = {
@@ -32970,6 +32971,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         type: S.literal("panel"),
         props: S.object({
           title: S.string(),
+          memberIds: S.array(S.string()).optional(),
           variant: S.enum(["default", "raised"]).optional(),
           fillToken: S.enum([
             "surface",
@@ -33640,6 +33642,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           children: (0, Z.jsx)("h2", { children: e.props.title }),
         });
       case "button":
+        if(e.props.simple)return (0,Z.jsx)(t_Simple,{element:e,disabled:n,interactive:!!r,onTap:()=>a(e.interactions?.onTap??[]),onLong:()=>a(e.interactions?.onLongPressComplete??[],"longPress"),legacyHold:e.interactions?.hold?.durationMs});
       case "navigation": {
         let u = !!(
             e.props.selectedWhen &&

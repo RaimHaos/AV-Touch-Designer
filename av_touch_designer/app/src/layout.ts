@@ -38,27 +38,21 @@ export function arrange(p: Project, id: string, ids: string[], mode: string, gap
   for(const e of changes.values()) if(e.x<0||e.y<0||e.x+e.width>bounds.width||e.y+e.height>bounds.height) throw Error('配置が画面外になります。間隔・列数または部品サイズを調整してください');
   return replace(p,id,c.elements.map(e=>changes.get(e.id)??e));
 }
-export function reflow(before: Project, after: Project): Project {
-  let result=after;
-  for(const old of [...before.pages,...before.popups]) {
-    const next=[...result.pages,...result.popups].find(c=>c.id===old.id); if(!next) continue; let elements=next.elements;
-    const owners=new Set<string>();
-    for(const panel of old.elements.filter(e=>e.type==='panel'&&e.props.responsive===true)) {
-      const target=next.elements.find(e=>e.id===panel.id);
-      if(!target||['x','y','width','height'].every(k=>panel[k]===target[k])) continue;
-      elements=elements.map(e=>{
-        const base=old.elements.find(b=>b.id===e.id);
-        if(!base||base.type==='panel'||base.zIndex<=panel.zIndex||base.x<panel.x||base.y<panel.y||base.x+base.width>panel.x+panel.width||base.y+base.height>panel.y+panel.height) return e;
-        if(owners.has(e.id)) throw Error('追従パネルが重複しています');
-        owners.add(e.id);
-        if(base.locked) throw Error('内部にロックされた部品があります。解除してから変更してください');
-        // Always derive from the gesture's original geometry, avoiding cumulative rounding.
-        return {...e,x:Math.round(target.x+(base.x-panel.x)*target.width/panel.width),y:Math.round(target.y+(base.y-panel.y)*target.height/panel.height),width:Math.round(base.width*target.width/panel.width),height:Math.round(base.height*target.height/panel.height)};
-      });
-    }
-    result=replace(result,old.id,elements);
-  }
-  return result;
+/** Panels are independent, including legacy responsive panels. Explicit selection is handled by the editor. */
+export function reflow(_before: Project, after: Project): Project { return after; }
+export function resizeMany(p:Project,id:string,ids:string[],width:number,height:number,orientation?:string):Project {
+ const c=container(p,id),bounds=(p.popups.find(c=>c.id===id) as {width:number;height:number}|undefined)??p.canvas;
+ if(!Number.isInteger(width)||!Number.isInteger(height)||width<24||height<24)throw Error('幅・高さは24以上の整数で指定してください');
+ if(orientation&& !['horizontal','vertical'].includes(orientation))throw Error('向きが不正です');
+ const elements=c.elements.map(e=>{
+  if(!ids.includes(e.id))return e;
+  if(e.locked)throw Error('選択部品のロックを解除してください');
+  const props=orientation&&e.type==='volume'?{...e.props,orientation}:e.props;
+  if(e.type==='volume'&&(width<((props.orientation??'horizontal')==='vertical'?96:240)||height<((props.orientation??'horizontal')==='vertical'?240:96)))throw Error('音量の最小サイズは横240×96、縦96×240です');
+  if(e.x+width>bounds.width||e.y+height>bounds.height)throw Error('変更後の部品が画面外になります');
+  return {...e,width,height,props};
+ });
+ return replace(p,id,elements);
 }
 export function addTemplate(p: Project,id:string,video:number,audio:number,uid:(prefix?:string)=>string): {project:Project;ids:string[]} {
   if(!Number.isInteger(video)||video<0||video>8||!Number.isInteger(audio)||audio<0||audio>8||video+audio===0) throw Error('映像・音声は各0〜8、合計1以上で指定してください');
@@ -67,11 +61,12 @@ export function addTemplate(p: Project,id:string,video:number,audio:number,uid:(
   if(width<300||height>bounds.height-32) throw Error('テンプレートが収まりません。チャンネル数を減らすか画面を広げてください');
   const top=Math.max(0,...c.elements.map(e=>e.zIndex))+1;
   const make=(type:string,x:number,y:number,w:number,h:number,props:Record<string,unknown>,z:number):Element=>({id:uid('el'),type,x,y,width:w,height:h,zIndex:z,locked:false,props,interactions:{}});
-  const items:Element[]=[make('panel',16,16,width,height,{title:video?'映像選択':'音声',responsive:true},top)];
+  const items:Element[]=[make('panel',16,16,width,height,{title:video?'映像選択':'音声',responsive:false},top)];
   const definitions:Record<string,unknown>[]=[];
   let y=80;
   if(video){const key=uid('video');definitions.push({key,type:'string',initialValue:'input_1'});items.push(make('sourceSelector',32,y,width-32,112,{stateKey:key,columns:Math.min(video,4),options:Array.from({length:video},(_,i)=>({label:`映像 ${i+1}`,value:`input_${i+1}`}))},top+1));y+=132;}
   for(let i=0;i<audio;i++){const key=uid('audio'), mute=uid('mute');definitions.push({key,type:'number',initialValue:50,min:0,max:100,step:1},{key:mute,type:'boolean',initialValue:false});items.push(make('volume',32,y,width-32,96,{label:`音声 ${i+1}`,stateKey:key,muteStateKey:mute,showValue:true},top+1));y+=104;}
+  items[0].props.memberIds=items.filter(e=>e.type==='volume').map(e=>e.id);
   return {project:{...replace(p,id,[...c.elements,...items]),stateDefinitions:[...p.stateDefinitions,...definitions]},ids:items.map(e=>e.id)};
 }
 

@@ -19,7 +19,7 @@ await page.goto('http://127.0.0.1:4173');await load(fixture);
 // Real inspector resizing propagates geometry and survives JSON round trip / undo.
 await page.locator('.editor-canvas [data-element-id=panel]').click({position:{x:10,y:10}});
 await page.getByRole('spinbutton',{name:'width',exact:true}).fill('900');await page.getByRole('spinbutton',{name:'width',exact:true}).press('Enter');
-let data=await save();assert.equal(data.pages[0].elements.find(e=>e.id==='a').width,150);assert.equal(data.pages[0].elements.find(e=>e.id==='a').x,100);
+let data=await save();assert.equal(data.pages[0].elements.find(e=>e.id==='a').width,100);assert.equal(data.pages[0].elements.find(e=>e.id==='a').x,80);
 await page.getByRole('button',{name:'元に戻す',exact:true}).click();data=await save();assert.equal(data.pages[0].elements.find(e=>e.id==='a').width,100);
 await load(data);
 // Ctrl-select canvas items, align, grid, undo, save.
@@ -36,7 +36,7 @@ for (const [label,check] of [
  ['横並び',es=>new Set(es.map(e=>e.y)).size===1],['縦並び',es=>new Set(es.map(e=>e.x)).size===1]
 ]) {await load(fixture);await page.locator('.editor-canvas [data-element-id=a]').click();for(const id of ['b','c'])await page.locator(`.editor-canvas [data-element-id=${id}]`).click({modifiers:['Control']});await page.getByRole('button',{name:label,exact:true}).click();const result=await save();assert(check(result.pages[0].elements.filter(e=>['a','b','c'].includes(e.id))),label);}
 // A real panel drag follows interior content, in addition to the numeric resize above.
-await load(fixture);const panelBox=await page.locator('.editor-canvas [data-element-id=panel]').boundingBox();await page.mouse.move(panelBox.x+10,panelBox.y+10);await page.mouse.down();await page.mouse.move(panelBox.x+42,panelBox.y+34,{steps:5});await page.mouse.up();data=await save();const movedPanel=data.pages[0].elements.find(e=>e.id==='panel'), movedA=data.pages[0].elements.find(e=>e.id==='a');assert(movedPanel.x>40);assert.equal(movedA.x-80,movedPanel.x-40);assert.equal(movedA.y-140,movedPanel.y-60);
+await load(fixture);const panelBox=await page.locator('.editor-canvas [data-element-id=panel]').boundingBox();await page.mouse.move(panelBox.x+10,panelBox.y+10);await page.mouse.down();await page.mouse.move(panelBox.x+42,panelBox.y+34,{steps:5});await page.mouse.up();data=await save();const movedPanel=data.pages[0].elements.find(e=>e.id==='panel'), movedA=data.pages[0].elements.find(e=>e.id==='a');assert(movedPanel.x>40);assert.equal(movedA.x,80);assert.equal(movedA.y,140);
 // Reset fixture; hold cancel, accumulating stroke, completed state, tap suppression.
 await load(fixture);await page.getByRole('button',{name:'プレビュー',exact:true}).click();
 let hold=page.locator('.preview [data-element-id=a] button.av-button');let box=await hold.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.waitForTimeout(300);const progress=page.getByRole('progressbar',{name:'長押し進捗'});const first=Number(await progress.getAttribute('aria-valuenow'));assert(first>0&&first<90);await page.waitForTimeout(200);assert(Number(await progress.getAttribute('aria-valuenow'))>first);await page.screenshot({path:'test-results/hold-progress.png'});await page.mouse.move(1,1);await page.mouse.up();assert.equal(await page.getByRole('progressbar').count(),0);assert.equal(await page.locator('.preview input[type=range]').inputValue(),'65');

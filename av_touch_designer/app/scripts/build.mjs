@@ -4,7 +4,7 @@ const read=p=>readFile(p,'utf8');
 await mkdir('dist',{recursive:true});
 const layout=await build({entryPoints:['src/layout.ts'],bundle:true,write:false,format:'iife',globalName:'AVLayout',target:'es2022'});
 const hold=await read('src/hold.js');
-const bind=(name,react,jsx)=>hold.replaceAll('RecoveredHold',name).replaceAll('HOLD_REACT',react).replaceAll('HOLD_JSX',jsx);
+const bind=(name,react,jsx)=>hold.replaceAll('RecoveredHold',name).replaceAll('SimpleButton',name+'Simple').replaceAll('HOLD_REACT',react).replaceAll('HOLD_JSX',jsx);
 let runtime=await read('recovered/runtime.js');
 runtime=runtime.replace('/* __HOLD_RUNTIME__ */',bind('t_','fn','sn'));
 runtime=(await transform(runtime,{minify:true,target:'es2022'})).code;

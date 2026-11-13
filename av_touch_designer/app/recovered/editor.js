@@ -32942,6 +32942,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       text: A.string(),
       icon: A.string().optional(),
       variant: A.enum(["default", "primary", "danger"]).optional(),
+      simple: A.object({mode:A.enum(['visual','momentary','toggle']),normalFill:A.string().regex(/^#[0-9a-fA-F]{6}$/),normalText:A.string().regex(/^#[0-9a-fA-F]{6}$/),onFill:A.string().regex(/^#[0-9a-fA-F]{6}$/),onText:A.string().regex(/^#[0-9a-fA-F]{6}$/),holdMs:A.number().int().min(0).max(10000),group:A.string().max(100),maxOn:A.number().int().min(1).max(100)}).optional(),
       selectedWhen: v8.optional(),
     },
     $5 = {
@@ -32973,6 +32974,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
         type: A.literal("panel"),
         props: A.object({
           title: A.string(),
+          memberIds: A.array(A.string()).optional(),
           responsive: A.boolean().optional(),
           variant: A.enum(["default", "raised"]).optional(),
           fillToken: A.enum([
@@ -35458,6 +35460,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           children: (0, V.jsx)("h2", { children: e.props.title }),
         });
       case "button":
+        if(e.props.simple)return (0,V.jsx)(R3Simple,{element:e,disabled:r,interactive:!!n,onTap:()=>i(e.interactions?.onTap??[]),onLong:()=>i(e.interactions?.onLongPressComplete??[],"longPress"),legacyHold:e.interactions?.hold?.durationMs});
       case "navigation": {
         let o = !!(
             e.props.selectedWhen &&
@@ -38863,7 +38866,9 @@ SOFTWARE.
                 }),
                 (0, w.jsxs)(InspectorTabs, {
                   children: [
-                    (0,w.jsx)(ComponentLayout,{project:l,containerId:d.id,element:we,commit:next=>Yt(AVLayout.reflow(l,next))}),
+                    (0,w.jsx)(BatchSize,{project:l,containerId:d.id,selection:p,element:we,commit:Yt}),
+                    (0,w.jsx)(SimpleButtonSettings,{element:we,onChange:patch=>Ne(we.id,patch)}),
+                    (0,w.jsx)(ComponentLayout,{project:l,containerId:d.id,element:we,commit:Yt}),
 
                     (0, w.jsx)("h2", {
                       children: we
@@ -38874,8 +38879,7 @@ SOFTWARE.
                       ? (0, w.jsxs)(w.Fragment, {
                           children: [
                             (0, w.jsx)("p", { children: we.type }),
-                            we.type==='panel'&&(0,w.jsxs)('label',{children:[(0,w.jsx)('input',{type:'checkbox',checked:we.props.responsive===true,onChange:event=>Ne(we.id,{props:{...we.props,responsive:event.target.checked}})}),'内部部品をサイズ・移動に追従']}),
-                            we.type==='panel'&&(0,w.jsx)('p',{className:'hint',children:'パネル内に完全に収まる前面の部品を比例配置します。内部ロック部品がある場合は変更できません。'}),
+                            we.type==='panel'&&(0,w.jsx)('p',{className:'hint',children:'パネル単独では内部部品は動きません。一緒に操作する部品をCtrl＋クリックで選択してください。'}),
                             (0, w.jsx)("div", {
                               className: "geometry-fields",
                               children: [
