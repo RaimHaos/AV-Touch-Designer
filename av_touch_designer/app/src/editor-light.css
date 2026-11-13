@@ -65,3 +65,16 @@
 .component-layout .row {display:flex;gap:5px;flex-wrap:wrap}
 .editor-shell .component-layout button[aria-pressed=true] {color:#175d9f;background:#eaf2fc;border-color:#a8c6e8}
 .component-layout [role=alert] {color:#b42332}
+.selection-frame {position:absolute;z-index:100000;box-sizing:border-box;border:2px dashed #2174c7;pointer-events:none}
+.selection-frame.is-group {border:3px solid #8b5bd6;box-shadow:0 0 0 3px #8b5bd620}
+.selection-frame .resize-handle {pointer-events:auto;background:#fff!important;border:2px solid #8b5bd6!important}
+.selection-frame-label {position:absolute;left:-3px;bottom:calc(100% + 4px);padding:3px 8px;background:#2174c7;color:#fff;border-radius:4px;white-space:nowrap;font:600 13px sans-serif;pointer-events:auto;cursor:move}
+.is-group .selection-frame-label {background:#7041b9}
+.editor-canvas .av-element.group-member {outline:1px solid #8b5bd6!important}
+.editor-shell .group-settings {border:1px solid #c8b4e7;border-left:4px solid #8b5bd6;border-radius:6px;padding:12px;margin-bottom:16px;background:#faf7ff}
+.editor-shell [draggable=true] {cursor:grab}
+.editor-shell [draggable=true]:active {cursor:grabbing}
+.av-palette {margin:8px 0}
+.av-palette summary {cursor:pointer;font-size:12px;color:#526780}
+.av-palette button {margin-top:4px}
+.editor-shell .ribbon-content button[aria-pressed=true] {background:#f2eaff;color:#7041b9;border-color:#b99adf;opacity:1}

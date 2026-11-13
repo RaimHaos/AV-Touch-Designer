@@ -32942,7 +32942,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       text: A.string(),
       icon: A.string().optional(),
       variant: A.enum(["default", "primary", "danger"]).optional(),
-      simple: A.object({mode:A.enum(['visual','momentary','toggle']),normalFill:A.string().regex(/^#[0-9a-fA-F]{6}$/),normalText:A.string().regex(/^#[0-9a-fA-F]{6}$/),onFill:A.string().regex(/^#[0-9a-fA-F]{6}$/),onText:A.string().regex(/^#[0-9a-fA-F]{6}$/),holdMs:A.number().int().min(0).max(10000),group:A.string().max(100),maxOn:A.number().int().min(1).max(100)}).optional(),
+      simple: A.object({mode:A.enum(['visual','momentary','toggle']),normalFill:A.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),normalText:A.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),onFill:A.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),onText:A.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),holdMs:A.number().int().min(0).max(10000),group:A.string().max(100),maxOn:A.number().int().min(1).max(100)}).optional(),
       selectedWhen: v8.optional(),
     },
     $5 = {
@@ -38216,7 +38216,9 @@ SOFTWARE.
       (!C.active && Math.hypot(b.clientX - C.x, b.clientY - C.y) < 4) ||
         ((C.active = !0),
         he(AVLayout.reflow(C.base,
-          C.handle
+          C.handle&&C.ids.length>1
+            ? AVLayout.resizeSelectionDrag(C.base,d.id,C.ids,L,Qe,C.handle,E&&!b.altKey)
+            : C.handle
             ? Fs(C.base, d.id, (vn) =>
                 C.ids.includes(vn.id)
                   ? SA(vn, L, Qe, C.handle, m.width, m.height, E && !b.altKey)
@@ -38264,10 +38266,10 @@ SOFTWARE.
           D(""),
           U([]));
       },
-      W3 = (b) => {
+      W3 = (b, point) => {
         try {
           let C = TA(l, d.id, b);
-          (Yt(C.project), g([C.id]));
+          (Yt(point?AVLayout.placeAdded(l,C.project,d.id,point):C.project), g([C.id]));
         } catch (C) {
           D(String(C));
         }
@@ -38446,11 +38448,11 @@ SOFTWARE.
             }),
           ],
         }),
-        !n&&(0,w.jsx)(EditorRibbon,{themeId:l.themeId,setTheme:themeId=>ue(project=>({...project,themeId})),selection:p,copy:_o,paste:()=>Eo(),duplicate:xo,remove:bo,zoomFit:HA,
+        !n&&(0,w.jsx)(EditorRibbon,{groupActive:!!selectedGroup(l,p),hasGroup:l.groups.some(group=>group.memberIds.some(id=>p.includes(id))),themeId:l.themeId,setTheme:themeId=>ue(project=>({...project,themeId})),selection:p,copy:_o,paste:()=>Eo(),duplicate:xo,remove:bo,zoomFit:HA,
           align:mode=>{try{ue(b=>mode==='centerX'||mode==='centerY'?AVLayout.arrange(b,d.id,p,mode):Vf(b,d.id,p,mode))}catch(error){Hn(error)}},
           arrange:(mode,gap,cols)=>ue(b=>AVLayout.arrange(b,d.id,p,mode,gap,cols)),
           group:()=>ue(b=>({...b,groups:[...b.groups.filter(group=>!group.memberIds.some(id=>p.includes(id))),{id:vt('group'),memberIds:p}]})),
-          ungroup:()=>ue(b=>({...b,groups:b.groups.filter(group=>!group.memberIds.some(id=>p.includes(id)))}))}),
+          ungroup:()=>ue(b=>AVLayout.ungroupSelection(b,p))}),
         T &&
           (0, w.jsxs)("div", {
             className: "error",
@@ -38512,6 +38514,7 @@ SOFTWARE.
                         (0, w.jsxs)(
                           "button",
                           {
+                            ...paletteDrag('component',b),
                             onClick: () => W3(b),
                             children: [
                               (0, w.jsx)(He, {
@@ -38534,6 +38537,7 @@ SOFTWARE.
                         ),
                       ),
                     }),
+                    (0,w.jsx)(AVPalette,{add:W3}),
                     (0,w.jsx)(TemplateTools,{project:l,containerId:d.id,commit:Yt,select:g,addPower:()=>W3('powerControl'),addStartup:()=>{try{const result=AVLayout.addStartup(l,d.id,vt);if(Yt(result.project)){c(result.pageId);g([])}}catch(error){Hn(error)}}}),
                     (0, w.jsxs)("select", {
                       "aria-label": "AV\u90E8\u54C1",
@@ -38797,6 +38801,12 @@ SOFTWARE.
                           onClick: (b) => {
                             b.target === b.currentTarget && g([]);
                           },
+                          onDragOver:event=>{if(event.dataTransfer.types.includes('application/x-av-component')){event.preventDefault();event.dataTransfer.dropEffect='copy'}},
+                          onDrop:event=>{event.preventDefault();try{const payload=JSON.parse(event.dataTransfer.getData('application/x-av-component'));const rect=event.currentTarget.getBoundingClientRect(),point={x:(event.clientX-rect.left)/$,y:(event.clientY-rect.top)/$};
+                            if(payload.kind==='component'&&['button','label','panel','navigation','sourceSelector','volume','sceneSelector','cameraPreset','ptzPad','powerControl'].includes(payload.type))W3(payload.type,point);
+                            else if(payload.kind==='template'&&['video','audio'].includes(payload.type))document.dispatchEvent(new CustomEvent('av-template-drop',{detail:{type:payload.type,point,containerId:d.id}}));
+                            else if(payload.kind==='template'&&payload.type==='startup'){const result=AVLayout.addStartup(l,d.id,vt);if(Yt(result.project)){c(result.pageId);g([])}}
+                          }catch(error){Hn(error)}},
                           onPointerMove: MA,
                           onPointerUp: VA,
                           onPointerCancel: () => {
@@ -38806,7 +38816,7 @@ SOFTWARE.
                             (0, w.jsxs)(
                               "div",
                               {
-                                className: `av-element ${p.includes(b.id) ? "selection" : ""}`,
+                                className: `av-element ${p.includes(b.id) ? "selection" : ""} ${p.includes(b.id)&&selectedGroup(l,p)?"group-member":""}`,
                                 "data-element-id": b.id,
                                 "data-element-type": b.type,
                                 "data-custom-fill":b.styleOverrides?.fillToken?true:undefined,
@@ -38842,7 +38852,7 @@ SOFTWARE.
                               },
                               b.id,
                             ),
-                          ),
+                          ).concat(p.length>1?[(0,w.jsx)(SelectionFrame,{elements:Vn.elements,selection:p,group:selectedGroup(l,p),onPointerDown:Di})]:[]),
                         }),
                       }),
                     }),
@@ -38866,8 +38876,9 @@ SOFTWARE.
                 }),
                 (0, w.jsxs)(InspectorTabs, {
                   children: [
+                    (0,w.jsx)(GroupSettings,{project:l,containerId:d.id,selection:p,commit:Yt}),
                     (0,w.jsx)(BatchSize,{project:l,containerId:d.id,selection:p,element:we,commit:Yt}),
-                    (0,w.jsx)(SimpleButtonSettings,{element:we,onChange:patch=>Ne(we.id,patch)}),
+                    (0,w.jsx)(SimpleButtonSettings,{element:we,grouped:!!selectedGroup(l,p),onChange:patch=>Ne(we.id,patch)}),
                     (0,w.jsx)(ComponentLayout,{project:l,containerId:d.id,element:we,commit:Yt}),
 
                     (0, w.jsx)("h2", {
@@ -38882,6 +38893,7 @@ SOFTWARE.
                             we.type==='panel'&&(0,w.jsx)('p',{className:'hint',children:'パネル単独では内部部品は動きません。一緒に操作する部品をCtrl＋クリックで選択してください。'}),
                             (0, w.jsx)("div", {
                               className: "geometry-fields",
+                              hidden:p.length>1,
                               children: [
                                 "x",
                                 "y",

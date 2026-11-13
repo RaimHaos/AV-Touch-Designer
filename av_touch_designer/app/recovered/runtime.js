@@ -32939,7 +32939,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       text: S.string(),
       icon: S.string().optional(),
       variant: S.enum(["default", "primary", "danger"]).optional(),
-      simple: S.object({mode:S.enum(['visual','momentary','toggle']),normalFill:S.string().regex(/^#[0-9a-fA-F]{6}$/),normalText:S.string().regex(/^#[0-9a-fA-F]{6}$/),onFill:S.string().regex(/^#[0-9a-fA-F]{6}$/),onText:S.string().regex(/^#[0-9a-fA-F]{6}$/),holdMs:S.number().int().min(0).max(10000),group:S.string().max(100),maxOn:S.number().int().min(1).max(100)}).optional(),
+      simple: S.object({mode:S.enum(['visual','momentary','toggle']),normalFill:S.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),normalText:S.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),onFill:S.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),onText:S.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),holdMs:S.number().int().min(0).max(10000),group:S.string().max(100),maxOn:S.number().int().min(1).max(100)}).optional(),
       selectedWhen: uj.optional(),
     },
     z6 = {

@@ -151,3 +151,55 @@ export function stateChoices(p:Project):{key:string;label:string;type:string}[]{
   return {key,label:index>1?`${base} (${index})`:base,type:String(d.type)};
  });
 }
+
+export function selectionBounds(elements:Element[],ids:string[]):{x:number;y:number;width:number;height:number}|undefined {
+ const items=elements.filter(e=>ids.includes(e.id));if(!items.length)return;
+ const x=Math.min(...items.map(e=>e.x)),y=Math.min(...items.map(e=>e.y));
+ return {x,y,width:Math.max(...items.map(e=>e.x+e.width))-x,height:Math.max(...items.map(e=>e.y+e.height))-y};
+}
+/** Scale an explicit selection about its combined bounds, atomically. Panels never imply children. */
+export function resizeSelection(p:Project,id:string,ids:string[],box:{x:number;y:number;width:number;height:number}):Project {
+ const c=container(p,id),old=selectionBounds(c.elements,ids);if(!old)throw Error('部品を選択してください');
+ if(!Object.values(box).every(Number.isFinite)||box.width<=0||box.height<=0)throw Error('グループのサイズが不正です');
+ const bounds=(p.popups.find(c=>c.id===id) as {width:number;height:number}|undefined)??p.canvas;
+ const mins:Record<string,number[]>={button:[64,44],label:[48,24],panel:[80,60],navigation:[64,44],sourceSelector:[200,80],sceneSelector:[200,80],cameraPreset:[240,120],ptzPad:[220,220],powerControl:[200,80]};
+ return replace(p,id,c.elements.map(e=>{
+  if(!ids.includes(e.id))return e;if(e.locked)throw Error('グループ内のロックを解除してください');
+  const next={...e,x:Math.round(box.x+(e.x-old.x)*box.width/old.width),y:Math.round(box.y+(e.y-old.y)*box.height/old.height),width:Math.round(e.width*box.width/old.width),height:Math.round(e.height*box.height/old.height)};
+  const min=e.type==='volume'?(e.props.orientation==='vertical'?[96,240]:[240,96]):mins[e.type]??[24,24];
+  if(next.width<min[0]||next.height<min[1])throw Error('内部部品が最小サイズを下回ります');
+  if(next.x<0||next.y<0||next.x+next.width>bounds.width||next.y+next.height>bounds.height)throw Error('変更後のグループが画面外になります');
+  return next;
+ }));
+}
+export function placeAdded(before:Project,after:Project,id:string,point:{x:number;y:number}):Project {
+ const c=container(after,id),old=new Set(container(before,id).elements.map(e=>e.id)),ids=c.elements.filter(e=>!old.has(e.id)).map(e=>e.id),box=selectionBounds(c.elements,ids);
+ if(!box)return after;
+ const bounds=(after.popups.find(c=>c.id===id) as {width:number;height:number}|undefined)??after.canvas;
+ if(box.width>bounds.width||box.height>bounds.height)throw Error('追加部品が画面に収まりません');
+ const x=Math.max(0,Math.min(Math.round(point.x),bounds.width-box.width)),y=Math.max(0,Math.min(Math.round(point.y),bounds.height-box.height));
+ return replace(after,id,c.elements.map(e=>ids.includes(e.id)?{...e,x:e.x+x-box.x,y:e.y+y-box.y}:e));
+}
+export function resizeSelectionDrag(p:Project,id:string,ids:string[],dx:number,dy:number,handle:string,snap=false):Project {
+ const box=selectionBounds(container(p,id).elements,ids);if(!box)return p;
+ const round=(v:number)=>snap?Math.round(v/8)*8:Math.round(v);
+ let {x,y,width,height}=box;
+ if(handle.includes('e'))width=round(width+dx);
+ if(handle.includes('s'))height=round(height+dy);
+ if(handle.includes('w')){x=round(x+dx);width=box.x+box.width-x}
+ if(handle.includes('n')){y=round(y+dy);height=box.y+box.height-y}
+ return resizeSelection(p,id,ids,{x,y,width,height});
+}
+export function configureSwitching(p:Project,id:string,ids:string[],groupId:string,mode:string,maxOn:number,holdMs:number):Project {
+ const c=container(p,id),items=c.elements.filter(e=>ids.includes(e.id));
+ if(items.length<2||items.length!==ids.length||items.some(e=>e.type!=='button'||e.locked))throw Error('ロックされていないボタンを2個以上選択してください');
+ if(!['toggle','momentary'].includes(mode)||!groupId)throw Error('操作モードが不正です');
+ if(!Number.isInteger(maxOn)||maxOn<1||maxOn>Math.min(100,items.length))throw Error('同時ON数は1〜ボタン数以内で指定してください');
+ if(!Number.isInteger(holdMs)||holdMs<0||holdMs>10000)throw Error('長押し時間は0〜10000msの整数で指定してください');
+ return replace(p,id,c.elements.map(e=>ids.includes(e.id)?{...e,props:{...e.props,simple:{...(e.props.simple as Record<string,unknown>|undefined),mode,group:groupId,maxOn,holdMs}}}:e));
+}
+export function ungroupSelection(p:Project,ids:string[]):Project {
+ const groups=(p.groups??[]) as {id:string;memberIds:string[]}[],removed=groups.filter(g=>g.memberIds.some(id=>ids.includes(id))),keys=new Set(removed.map(g=>g.id));
+ const update=(c:Container)=>({...c,elements:c.elements.map(e=>{const simple=e.props.simple as Record<string,unknown>|undefined;return simple&&keys.has(String(simple.group))?{...e,props:{...e.props,simple:{...simple,group:''}}}:e})});
+ return {...p,groups:groups.filter(g=>!keys.has(g.id)),pages:p.pages.map(update),popups:p.popups.map(update)};
+}

@@ -39,3 +39,18 @@ test('batch size/direction is atomic and preserves bindings and legacy panel chi
  assert.throws(()=>resizeMany(original,'main',['a','b'],100,100,'vertical'));assert.throws(()=>resizeMany(original,'main',['a','b'],1200,280,'vertical'));assert.equal(original.pages[0].elements[1].width,260);
  const locked=structuredClone(original);locked.pages[0].elements[2].locked=true;assert.throws(()=>resizeMany(locked,'main',['a','b'],120,280,'vertical'),/ロック/);
 });
+
+test('group scaling uses combined bounds, preserves actions, and rejects undersized or locked children atomically',async()=>{
+ const {resizeSelection,resizeSelectionDrag}=await import('../src/layout.ts');const original=p([e('a',40,40,100,60),e('b',240,40,100,60),e('outside',800,40)]);
+ const next=resizeSelection(original,'main',['a','b'],{x:40,y:40,width:600,height:120});assert.deepEqual(next.pages[0].elements.slice(0,2).map(e=>[e.x,e.y,e.width,e.height]),[[40,40,200,120],[440,40,200,120]]);assert.deepEqual(next.pages[0].elements[2],original.pages[0].elements[2]);
+ assert.deepEqual(resizeSelectionDrag(original,'main',['a','b'],300,60,'se'),next);assert.throws(()=>resizeSelection(original,'main',['a','b'],{x:40,y:40,width:30,height:10}),/最小/);assert.equal(original.pages[0].elements[0].width,100);
+ const locked=structuredClone(original);locked.pages[0].elements[1].locked=true;assert.throws(()=>resizeSelection(locked,'main',['a','b'],{x:40,y:40,width:600,height:120}),/ロック/);
+});
+test('drop placement moves only added members, clamps to canvas and preserves relative layout',async()=>{
+ const {placeAdded}=await import('../src/layout.ts');const before=p([e('old',0,0)]),after=p([...before.pages[0].elements,e('a',16,16),e('b',140,16)]);
+ const placed=placeAdded(before,after,'main',{x:1200,y:790});assert.deepEqual(placed.pages[0].elements[0],before.pages[0].elements[0]);assert.equal(placed.pages[0].elements[2].x-placed.pages[0].elements[1].x,124);assert.equal(placed.pages[0].elements[2].x+100,1280);assert.equal(placed.pages[0].elements[1].y+60,800);
+});
+test('switching configuration applies one group and limit without changing existing event arrays',async()=>{
+ const {configureSwitching,ungroupSelection}=await import('../src/layout.ts');const a={...e('a',40,40),interactions:{onTap:[{type:'navigate',pageId:'other'}]}},original=p([a,e('b',240,40)]);const next=configureSwitching(original,'main',['a','b'],'group_1','toggle',1,500);
+ assert(next.pages[0].elements.every(e=>(e.props.simple as {group:string;maxOn:number}).group==='group_1'&&(e.props.simple as {maxOn:number}).maxOn===1));assert.deepEqual(next.pages[0].elements[0].interactions,a.interactions);assert.throws(()=>configureSwitching(original,'main',['a','b'],'g','toggle',3,0));assert.equal(original.pages[0].elements[0].props.simple,undefined);const ungrouped=ungroupSelection({...next,groups:[{id:'group_1',memberIds:['a','b']}]},['a','b']);assert.deepEqual(ungrouped.groups,[]);assert(ungrouped.pages[0].elements.every(e=>(e.props.simple as {group:string}).group===''));
+});
